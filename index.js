@@ -14,17 +14,36 @@ const {
   Events,
   StringSelectMenuBuilder,
   SlashCommandBuilder,
-  PermissionsBitField
+  PermissionsBitField,
+  AuditLogEvent
 } = require("discord.js");
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
-  partials: [Partials.Channel]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildInvites,
+    GatewayIntentBits.GuildModeration
+  ],
+  partials: [
+    Partials.Channel,
+    Partials.Message,
+    Partials.GuildMember,
+    Partials.User
+  ]
 });
 
 const CANAL_FUNCIONAL = "1484826121697628221";
 const CANAL_LOG_FUNCIONAL = "1484826214915899412";
 const CARGO_VUNESP = "1484825992739553321";
+
+const LOG_ENTRADAS = "1484826127531773974";
+const LOG_SAIDAS = "1484826130249810104";
+const LOG_MENSAGENS = "1484826139410173952";
+const LOG_EXONERACOES = "1484826148847489054";
+const LOG_CONVITES = "1484826154039771217";
 
 const sessoes = new Map();
 const pendentes = new Map();
@@ -385,6 +404,116 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }).catch(() => {});
     }
   }
+});
+
+client.on(Events.GuildMemberAdd, async (member) => {
+  const canal = client.channels.cache.get(LOG_ENTRADAS);
+  if (!canal) return;
+
+  const embed = new EmbedBuilder()
+    .setColor("#00FF7F")
+    .setDescription(`📥 | ${member} entrou no servidor.`)
+    .setTimestamp();
+
+  canal.send({ embeds: [embed] }).catch(() => {});
+});
+
+client.on(Events.GuildMemberRemove, async (member) => {
+  const canalSaidas = client.channels.cache.get(LOG_SAIDAS);
+  const canalExoneracoes = client.channels.cache.get(LOG_EXONERACOES);
+
+  if (canalSaidas) {
+    const embedSaida = new EmbedBuilder()
+      .setColor("#FFA500")
+      .setDescription(`📤 | ${member.user.tag} saiu do servidor.`)
+      .setTimestamp();
+
+    canalSaidas.send({ embeds: [embedSaida] }).catch(() => {});
+  }
+
+  const audit = await member.guild.fetchAuditLogs({
+    limit: 1,
+    type: AuditLogEvent.MemberKick
+  }).catch(() => null);
+
+  const kickLog = audit?.entries.first();
+
+  if (
+    kickLog &&
+    kickLog.target?.id === member.id &&
+    Date.now() - kickLog.createdTimestamp < 7000
+  ) {
+    if (canalExoneracoes) {
+      const embedKick = new EmbedBuilder()
+        .setColor("#FF0000")
+        .setDescription(`🚫 | ${member.user.tag} foi exonerado por ${kickLog.executor}.`)
+        .setTimestamp();
+
+      canalExoneracoes.send({ embeds: [embedKick] }).catch(() => {});
+    }
+  }
+});
+
+client.on(Events.GuildBanAdd, async (ban) => {
+  const canal = client.channels.cache.get(LOG_EXONERACOES);
+  if (!canal) return;
+
+  const audit = await ban.guild.fetchAuditLogs({
+    limit: 1,
+    type: AuditLogEvent.MemberBanAdd
+  }).catch(() => null);
+
+  const banLog = audit?.entries.first();
+  const executor = banLog?.executor ? `${banLog.executor}` : "Não identificado";
+
+  const embed = new EmbedBuilder()
+    .setColor("#FF0000")
+    .setDescription(`⛔ | ${ban.user.tag} foi banido/exonerado por ${executor}.`)
+    .setTimestamp();
+
+  canal.send({ embeds: [embed] }).catch(() => {});
+});
+
+client.on(Events.MessageDelete, async (message) => {
+  if (!message.guild) return;
+  if (!message.author) return;
+  if (message.author.bot) return;
+
+  const canal = client.channels.cache.get(LOG_MENSAGENS);
+  if (!canal) return;
+
+  const conteudo = message.content
+    ? message.content.slice(0, 1000)
+    : "Mensagem sem texto ou não armazenada em cache.";
+
+  const embed = new EmbedBuilder()
+    .setColor("#5865F2")
+    .setDescription(`🎉 | O chat teve 1 mensagem deletada por ${message.author}!`)
+    .addFields(
+      { name: "📍 Canal", value: `${message.channel}`, inline: true },
+      { name: "💬 Conteúdo", value: conteudo }
+    )
+    .setTimestamp();
+
+  canal.send({ embeds: [embed] }).catch(() => {});
+});
+
+client.on(Events.InviteCreate, async (invite) => {
+  const canal = client.channels.cache.get(LOG_CONVITES);
+  if (!canal) return;
+
+  const criador = invite.inviter ? `${invite.inviter}` : "Não identificado";
+
+  const embed = new EmbedBuilder()
+    .setColor("#57F287")
+    .setDescription(`🔗 | ${criador} criou um novo convite em ${invite.channel}.`)
+    .addFields({
+      name: "📎 Convite",
+      value: `https://discord.gg/${invite.code}`
+    })
+    .setTimestamp();
+
+  canal.send({ embeds: [embed] }).catch(() => {});
 });
 
 client.login(process.env.TOKEN);
