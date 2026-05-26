@@ -13,7 +13,8 @@ const {
   TextInputStyle,
   Events,
   StringSelectMenuBuilder,
-  SlashCommandBuilder
+  SlashCommandBuilder,
+  PermissionsBitField
 } = require("discord.js");
 
 const client = new Client({
@@ -22,7 +23,11 @@ const client = new Client({
 });
 
 const CANAL_FUNCIONAL = "1484826121697628221";
+const CANAL_LOG_FUNCIONAL = "1484826214915899412";
+const CARGO_VUNESP = "1484825992739553321";
+
 const sessoes = new Map();
+const pendentes = new Map();
 
 const hierarquias = {
   "coronel": { nome: "Coronel PM", insignia: "[✵✵✵]", cargo: "1484825756331937812" },
@@ -92,7 +97,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           "• Hierarquia\n" +
           "• Unidade/Batalhão\n" +
           "• Cursos\n\n" +
-          "⚠️ Solicitações incorretas poderão ser revisadas pela equipe de RH."
+          "⚠️ A funcional será analisada por um comandante antes da liberação."
         )
         .setColor("#87CEEB")
         .setFooter({ text: "SSP Litoral Paulista • P1 Recursos Humanos" });
@@ -196,7 +201,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
 
       await interaction.update({
-        content: "📚 Agora selecione seus **cursos**. Se não tiver curso, apenas envie sem selecionar.",
+        content: "📚 Agora selecione seus **cursos**.",
         components: [new ActionRowBuilder().addComponents(menuCursos)]
       });
     }
@@ -205,52 +210,170 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const sessao = sessoes.get(interaction.user.id);
       sessao.cursos = interaction.values;
 
-      const membro = interaction.member;
       const patente = hierarquias[sessao.patente];
       const unidade = unidades[sessao.unidade];
+
+      const novoNick = `${patente.insignia} ${sessao.nome} | ${sessao.rg}`;
+      const cursosTexto = sessao.cursos.length
+        ? sessao.cursos.map(c => cursos[c].nome).join(", ")
+        : "Nenhum curso informado";
+
+      pendentes.set(interaction.user.id, {
+        userId: interaction.user.id,
+        nome: sessao.nome,
+        rg: sessao.rg,
+        patenteKey: sessao.patente,
+        unidadeKey: sessao.unidade,
+        cursosKeys: sessao.cursos,
+        novoNick
+      });
+
+      const logEmbed = new EmbedBuilder()
+        .setTitle("📝 Nova Solicitação de Funcional")
+        .setColor("#FFD700")
+        .addFields(
+          { name: "👤 Solicitante", value: `<@${interaction.user.id}>`, inline: true },
+          { name: "👮 Nome", value: sessao.nome, inline: true },
+          { name: "🆔 RG", value: sessao.rg, inline: true },
+          { name: "🎖️ Hierarquia", value: patente.nome, inline: true },
+          { name: "🏢 Unidade", value: unidade.nome, inline: true },
+          { name: "📚 Cursos", value: cursosTexto },
+          { name: "🏷️ Nickname proposto", value: novoNick }
+        )
+        .setFooter({ text: "Aguardando análise do comando" })
+        .setTimestamp();
+
+      const aprovar = new ButtonBuilder()
+        .setCustomId(`aprovar_funcional_${interaction.user.id}`)
+        .setLabel("Aprovar Funcional")
+        .setEmoji("✅")
+        .setStyle(ButtonStyle.Success);
+
+      const negar = new ButtonBuilder()
+        .setCustomId(`negar_funcional_${interaction.user.id}`)
+        .setLabel("Negar Funcional")
+        .setEmoji("❌")
+        .setStyle(ButtonStyle.Danger);
+
+      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_FUNCIONAL).catch(() => null);
+
+      if (canalLog) {
+        await canalLog.send({
+          embeds: [logEmbed],
+          components: [new ActionRowBuilder().addComponents(aprovar, negar)]
+        });
+      }
+
+      await interaction.update({
+        content: "✅ Sua solicitação foi enviada para análise do comando.",
+        components: [],
+        embeds: []
+      });
+
+      sessoes.delete(interaction.user.id);
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith("aprovar_funcional_")) {
+      if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+        return interaction.reply({
+          content: "❌ Você não tem permissão para aprovar funcionais.",
+          ephemeral: true
+        });
+      }
+
+      const userId = interaction.customId.replace("aprovar_funcional_", "");
+      const dados = pendentes.get(userId);
+
+      if (!dados) {
+        return interaction.reply({
+          content: "❌ Solicitação não encontrada ou o bot foi reiniciado.",
+          ephemeral: true
+        });
+      }
+
+      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+
+      if (!membro) {
+        return interaction.reply({
+          content: "❌ Membro não encontrado no servidor.",
+          ephemeral: true
+        });
+      }
+
+      const patente = hierarquias[dados.patenteKey];
+      const unidade = unidades[dados.unidadeKey];
 
       const todosCargosHierarquia = Object.values(hierarquias).map(x => x.cargo);
       const todosCargosUnidade = Object.values(unidades).map(x => x.cargo);
 
       await membro.roles.remove(todosCargosHierarquia).catch(() => {});
       await membro.roles.remove(todosCargosUnidade).catch(() => {});
+      await membro.roles.remove(CARGO_VUNESP).catch(() => {});
 
       await membro.roles.add(patente.cargo).catch(() => {});
       await membro.roles.add(unidade.cargo).catch(() => {});
 
-      for (const cursoSelecionado of sessao.cursos) {
-        await membro.roles.add(cursos[cursoSelecionado].cargo).catch(() => {});
+      for (const cursoKey of dados.cursosKeys) {
+        await membro.roles.add(cursos[cursoKey].cargo).catch(() => {});
       }
 
-      const novoNick = `${patente.insignia} ${sessao.nome} | ${sessao.rg}`;
+      await membro.setNickname(dados.novoNick).catch(() => {});
 
-      await membro.setNickname(novoNick).catch(() => {});
+      pendentes.delete(userId);
 
-      const cursosTexto = sessao.cursos.length
-        ? sessao.cursos.map(c => cursos[c].nome).join(", ")
-        : "Nenhum curso informado";
-
-      const embed = new EmbedBuilder()
-        .setTitle("🪪 Funcional Emitida")
-        .setColor("#87CEEB")
-        .addFields(
-          { name: "👮 Nome", value: sessao.nome, inline: true },
-          { name: "🆔 RG", value: sessao.rg, inline: true },
-          { name: "🎖️ Hierarquia", value: patente.nome, inline: true },
-          { name: "🏢 Unidade", value: unidade.nome, inline: true },
-          { name: "📚 Cursos", value: cursosTexto },
-          { name: "🏷️ Novo nickname", value: novoNick }
-        )
-        .setFooter({ text: "SSP Litoral Paulista • Sistema de Funcional" })
-        .setTimestamp();
+      const aprovadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+        .setColor("#00FF7F")
+        .setFooter({ text: `Funcional aprovada por ${interaction.user.tag}` });
 
       await interaction.update({
-        content: "✅ Funcional emitida com sucesso!",
-        embeds: [embed],
+        content: "✅ Funcional aprovada e cargos aplicados.",
+        embeds: [aprovadoEmbed],
         components: []
       });
+    }
 
-      sessoes.delete(interaction.user.id);
+    if (interaction.isButton() && interaction.customId.startsWith("negar_funcional_")) {
+      if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+        return interaction.reply({
+          content: "❌ Você não tem permissão para negar funcionais.",
+          ephemeral: true
+        });
+      }
+
+      const userId = interaction.customId.replace("negar_funcional_", "");
+      const dados = pendentes.get(userId);
+
+      if (!dados) {
+        return interaction.reply({
+          content: "❌ Solicitação não encontrada ou o bot foi reiniciado.",
+          ephemeral: true
+        });
+      }
+
+      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+
+      if (membro) {
+        const todosCargosHierarquia = Object.values(hierarquias).map(x => x.cargo);
+        const todosCargosUnidade = Object.values(unidades).map(x => x.cargo);
+        const todosCargosCursos = Object.values(cursos).map(x => x.cargo);
+
+        await membro.roles.remove(todosCargosHierarquia).catch(() => {});
+        await membro.roles.remove(todosCargosUnidade).catch(() => {});
+        await membro.roles.remove(todosCargosCursos).catch(() => {});
+        await membro.roles.add(CARGO_VUNESP).catch(() => {});
+      }
+
+      pendentes.delete(userId);
+
+      const negadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+        .setColor("#FF0000")
+        .setFooter({ text: `Funcional negada por ${interaction.user.tag}` });
+
+      await interaction.update({
+        content: "❌ Funcional negada. O membro ficou apenas com o cargo VUNESP.",
+        embeds: [negadoEmbed],
+        components: []
+      });
     }
   } catch (err) {
     console.error(err);
