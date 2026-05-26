@@ -47,6 +47,39 @@ const LOG_CONVITES = "1484826154039771217";
 
 const sessoes = new Map();
 const pendentes = new Map();
+const boletins = new Map();
+
+const canaisBI = {
+  ssp: "1484826324530102303",
+  qcg: "1484826160222441523",
+  corregedoria: "1484826324530102303",
+  cpchoque: "1500288574162210886",
+  "22bpm": "1484826380788174868",
+  forca_tatica: "1484826425331548180",
+  cavpm: "1484826456826843188",
+  caep: "1484826491970912369",
+  baep: "1484826529186844693",
+  rota: "1484826591640031243",
+  anchieta: "1484826628935778344",
+  humaita: "1484826663530401792",
+  "4bpchoque": "1484826703304855645"
+};
+
+const nomesBI = {
+  ssp: "SSP",
+  qcg: "QCG",
+  corregedoria: "Corregedoria",
+  cpchoque: "CPChoque",
+  "22bpm": "22º BPM",
+  forca_tatica: "Força Tática",
+  cavpm: "CAVPM",
+  caep: "CAEP",
+  baep: "BAEP",
+  rota: "ROTA",
+  anchieta: "Anchieta",
+  humaita: "Humaitá",
+  "4bpchoque": "4º BPChoque"
+};
 
 const hierarquias = {
   "coronel": { nome: "Coronel PM", insignia: "[✵✵✵]", cargo: "1484825756331937812" },
@@ -91,6 +124,57 @@ const cursos = {
   "copom": { nome: "OPERADOR COPOM", cargo: "1484825922463862795" }
 };
 
+function montarTextoBI(dados) {
+  const agora = new Date();
+  const data = agora.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  const hora = agora.toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  return `# BOLETIM GERAL - POLÍCIA MILITAR DO ESTADO DE SÃO PAULO
+
+**Unidade:** ${nomesBI[dados.unidade] || "Não informada"}
+
+📁 | **1º PARTE SERVIÇOS DIÁRIOS:**
+BOLETIM GERAL Nº ${dados.numero || "___"}/2026
+
+${dados.parte1 || "Sem alterações."}
+
+📁 | **2º PARTE INSTRUÇÃO E OPERAÇÕES POLICIAIS MILITARES:**
+
+${dados.parte2 || "Sem alterações."}
+
+📁 | **3º PARTE ASSUNTOS GERAIS E ADMINISTRATIVOS:**
+
+${dados.parte3 || "Sem alterações."}
+
+📁 | **4º PARTE JUSTIÇA E DISCIPLINA:**
+
+${dados.parte4 || "Sem alterações."}
+
+
+Secretaria da Segurança Pública - Polícia Militar • ${data} ${hora}h`;
+}
+
+function botoesBI() {
+  const linha1 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId("bi_parte1").setLabel("1ª Parte").setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId("bi_parte2").setLabel("2ª Parte").setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId("bi_parte3").setLabel("3ª Parte").setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId("bi_parte4").setLabel("4ª Parte").setStyle(ButtonStyle.Primary)
+  );
+
+  const linha2 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId("preview_bi").setLabel("Pré-visualizar").setEmoji("👁️").setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId("publicar_bi").setLabel("Publicar").setEmoji("✅").setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId("cancelar_bi").setLabel("Cancelar").setEmoji("❌").setStyle(ButtonStyle.Danger)
+  );
+
+  return [linha1, linha2];
+}
+
 client.once("ready", async () => {
   console.log(`✅ Bot online como ${client.user.tag}`);
 
@@ -98,12 +182,196 @@ client.once("ready", async () => {
     new SlashCommandBuilder()
       .setName("painel-funcional")
       .setDescription("Envia o painel de solicitação de funcional.")
+      .toJSON(),
+
+    new SlashCommandBuilder()
+      .setName("boletim")
+      .setDescription("Criar e publicar boletim interno.")
       .toJSON()
   ]);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
+    if (interaction.isChatInputCommand() && interaction.commandName === "boletim") {
+      boletins.set(interaction.user.id, {
+        unidade: "",
+        numero: "",
+        parte1: "",
+        parte2: "",
+        parte3: "",
+        parte4: ""
+      });
+
+      const menuBI = new StringSelectMenuBuilder()
+        .setCustomId("selecionar_bi")
+        .setPlaceholder("Selecione a unidade do boletim")
+        .addOptions([
+          { label: "SSP", value: "ssp" },
+          { label: "QCG", value: "qcg" },
+          { label: "Corregedoria", value: "corregedoria" },
+          { label: "CPChoque", value: "cpchoque" },
+          { label: "22º BPM", value: "22bpm" },
+          { label: "Força Tática", value: "forca_tatica" },
+          { label: "CAVPM", value: "cavpm" },
+          { label: "CAEP", value: "caep" },
+          { label: "BAEP", value: "baep" },
+          { label: "ROTA", value: "rota" },
+          { label: "Anchieta", value: "anchieta" },
+          { label: "Humaitá", value: "humaita" },
+          { label: "4º BPChoque", value: "4bpchoque" }
+        ]);
+
+      return interaction.reply({
+        content: "📁 Selecione a unidade que vai publicar o Boletim Interno:",
+        components: [new ActionRowBuilder().addComponents(menuBI)],
+        ephemeral: true
+      });
+    }
+
+    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_bi") {
+      const dados = boletins.get(interaction.user.id);
+      dados.unidade = interaction.values[0];
+      boletins.set(interaction.user.id, dados);
+
+      return interaction.update({
+        content: `📋 Boletim selecionado para: **${nomesBI[dados.unidade]}**\n\nAgora preencha cada parte. Você pode pré-visualizar antes de publicar.`,
+        components: botoesBI()
+      });
+    }
+
+    if (
+      interaction.isButton() &&
+      ["bi_parte1", "bi_parte2", "bi_parte3", "bi_parte4"].includes(interaction.customId)
+    ) {
+      const modal = new ModalBuilder()
+        .setCustomId(`modal_${interaction.customId}`)
+        .setTitle("Editar Parte do Boletim");
+
+      if (interaction.customId === "bi_parte1") {
+        const numeroInput = new TextInputBuilder()
+          .setCustomId("numero")
+          .setLabel("Número do Boletim Geral")
+          .setPlaceholder("Ex: 001")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
+
+        const textoInput = new TextInputBuilder()
+          .setCustomId("texto")
+          .setLabel("1ª Parte - Serviços Diários")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(false);
+
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(numeroInput),
+          new ActionRowBuilder().addComponents(textoInput)
+        );
+      } else {
+        const labels = {
+          bi_parte2: "2ª Parte - Instrução e Operações",
+          bi_parte3: "3ª Parte - Assuntos Gerais",
+          bi_parte4: "4ª Parte - Justiça e Disciplina"
+        };
+
+        const textoInput = new TextInputBuilder()
+          .setCustomId("texto")
+          .setLabel(labels[interaction.customId])
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(false);
+
+        modal.addComponents(new ActionRowBuilder().addComponents(textoInput));
+      }
+
+      return interaction.showModal(modal);
+    }
+
+    if (
+      interaction.isModalSubmit() &&
+      ["modal_bi_parte1", "modal_bi_parte2", "modal_bi_parte3", "modal_bi_parte4"].includes(interaction.customId)
+    ) {
+      const dados = boletins.get(interaction.user.id);
+
+      if (!dados) {
+        return interaction.reply({
+          content: "❌ Boletim não encontrado. Use /boletim novamente.",
+          ephemeral: true
+        });
+      }
+
+      const texto = interaction.fields.getTextInputValue("texto") || "";
+
+      if (interaction.customId === "modal_bi_parte1") {
+        dados.numero = interaction.fields.getTextInputValue("numero") || "___";
+        dados.parte1 = texto;
+      }
+
+      if (interaction.customId === "modal_bi_parte2") dados.parte2 = texto;
+      if (interaction.customId === "modal_bi_parte3") dados.parte3 = texto;
+      if (interaction.customId === "modal_bi_parte4") dados.parte4 = texto;
+
+      boletins.set(interaction.user.id, dados);
+
+      return interaction.reply({
+        content: "✅ Parte salva com sucesso. Use **Pré-visualizar** para conferir ou edite novamente.",
+        ephemeral: true
+      });
+    }
+
+    if (interaction.isButton() && interaction.customId === "preview_bi") {
+      const dados = boletins.get(interaction.user.id);
+
+      if (!dados) {
+        return interaction.reply({
+          content: "❌ Boletim não encontrado. Use /boletim novamente.",
+          ephemeral: true
+        });
+      }
+
+      return interaction.reply({
+        content: montarTextoBI(dados),
+        ephemeral: true
+      });
+    }
+
+    if (interaction.isButton() && interaction.customId === "cancelar_bi") {
+      boletins.delete(interaction.user.id);
+
+      return interaction.update({
+        content: "❌ Boletim cancelado.",
+        components: []
+      });
+    }
+
+    if (interaction.isButton() && interaction.customId === "publicar_bi") {
+      const dados = boletins.get(interaction.user.id);
+
+      if (!dados) {
+        return interaction.reply({
+          content: "❌ Boletim não encontrado. Use /boletim novamente.",
+          ephemeral: true
+        });
+      }
+
+      const canalID = canaisBI[dados.unidade];
+      const canal = await interaction.guild.channels.fetch(canalID).catch(() => null);
+
+      if (!canal) {
+        return interaction.reply({
+          content: "❌ Canal do boletim não encontrado.",
+          ephemeral: true
+        });
+      }
+
+      await canal.send({ content: montarTextoBI(dados) });
+
+      boletins.delete(interaction.user.id);
+
+      return interaction.update({
+        content: `✅ Boletim publicado com sucesso em **${nomesBI[dados.unidade]}**.`,
+        components: []
+      });
+    }
+
     if (interaction.isChatInputCommand() && interaction.commandName === "painel-funcional") {
       const embed = new EmbedBuilder()
         .setTitle("🪪 Solicitação de Funcional")
