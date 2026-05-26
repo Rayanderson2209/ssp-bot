@@ -25,7 +25,8 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildInvites,
-    GatewayIntentBits.GuildModeration
+    GatewayIntentBits.GuildModeration,
+    GatewayIntentBits.GuildVoiceStates
   ],
   partials: [
     Partials.Channel,
@@ -44,6 +45,177 @@ const LOG_SAIDAS = "1484826130249810104";
 const LOG_MENSAGENS = "1484826139410173952";
 const LOG_EXONERACOES = "1484826148847489054";
 const LOG_CONVITES = "1484826154039771217";
+const CANAL_LOG_PONTOS_GERAL = "1484826135178248222";
+
+const CANAIS_LOG_PONTO = {
+  QCG: "1508864434007834644",
+  CORREGEDORIA: "1508864278311207012",
+  "22BPM": "1484826391340912650",
+  FORCA_TATICA: "1484826438572965950",
+  CAVPM: "1484826472265814046",
+  CAEP: "1484826498962817034",
+  CPCHOQUE: "1508559449793630318",
+  BAEP: "1484826544013574274",
+  ROTA: "1484826598401245235",
+  ANCHIETA: "1484826634505814107",
+  HUMAITA: "1484826674251169873",
+  "4BPCHOQUE": "1484826714377818172"
+};
+
+const CANALETAS_PONTO = {
+  "1484826105289506836": { batalhaoKey: "QCG", batalhao: "QCG", nome: "CMTG - 001" },
+  "1484826106522505237": { batalhaoKey: "QCG", batalhao: "QCG", nome: "SUBCMTG - 002" },
+
+  "1484826141364715663": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60000" },
+  "1484826143713398844": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60001" },
+  "1484826147152859267": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60018" },
+  "1484826150596382863": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60038" },
+  "1484826152475430962": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60040" },
+  "1500031721641476266": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60050" },
+
+  "1484826188932448316": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Comando Batalhão | M-22000" },
+  "1484826193306976306": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Sub.Comando Batalhão | M-22001" },
+  "1484826202442043496": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CoordOp | M-22002" },
+  "1484826205696950454": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Supervisão Regional | M-22003" },
+  "1484826208477777940": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CFP | M-22004" },
+  "1484826211254534206": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CGP UNO | M-22223" },
+  "1484826212844175442": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22132 (Duster PM)" },
+  "1484826217864499220": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22106 (Duster PM)" },
+  "1505616011133456625": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22136 (Spin 2023)" },
+  "1484826219181641738": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22146 (Spin 2024)" },
+  "1484826222490812428": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23111 (Spin 2024)" },
+  "1484826225313845299": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-28100 (Duster)" },
+  "1484826228493127730": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23117 (Spin 2024)" },
+  "1484826231156244481": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23140 (Duster)" },
+  "1484826235992281088": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23151/152 (Creta)" },
+  "1484826236869148915": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23153/116 (Creta)" },
+  "1484826240052494467": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23165 (Corolla)" },
+  "1484826243017736274": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23168 (Corolla)" },
+  "1484826246226645002": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM UNO (XRE/LANDER)" },
+  "1484826250659889262": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM DOIS (XRE/LANDER)" },
+  "1484826252438147215": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Base Comunitária M-23270" },
+  "1484826277939773551": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Patrulha Rural" },
+  "1484826281358000259": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM TRES (XRE/LANDER)" },
+
+  "1484826320436199544": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Comando - M-22001" },
+  "1484826323338919957": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Tático Comando - M-22011" },
+  "1484826325679341598": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Tático 90 - M-22090" },
+  "1484826330037227520": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22013 - Tático 13" },
+  "1484826331677200506": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22014 - Tático 14" },
+  "1484826336437735485": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22015 - Tático 15" },
+  "1484826339499315294": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22016 - Tático 16" },
+  "1484826343328977020": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22017 - Tático 17" },
+  "1484826352044609547": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22019 - Tático 19" },
+  "1484826356104564816": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22028 - Tático 28" },
+  "1484826357488947222": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "COMANDO ROCAM" },
+  "1484826360412377138": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "CGP ROCAM (Trail 23)" },
+  "1484826364841558069": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "ROCAM UNO" },
+  "1484826375314735194": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "ROCAM DOIS" },
+
+  "1484826382998569081": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "M-3-550/M-3 555/M-3 547" },
+  "1484826386878300242": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 10 (AS350-B3)" },
+  "1484826389843808308": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 19 (AS350-B3)" },
+  "1484826393056378901": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 23 (AS350) GRAU" },
+  "1484826396835713076": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 32 (AW109)" },
+  "1484826400241225830": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 33 (EC135)" },
+
+  "1484826411897458738": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "Comando OESTE | E-M05000" },
+  "1484826415395242054": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CAEP Comando | E-M05001" },
+  "1484826419933614230": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "Coordenador CAEP | E-M05002" },
+  "1484826421367930943": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05004" },
+  "1484826428745711626": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CAEP 90 | E-M05090" },
+  "1484826432524910733": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05006" },
+  "1484826436299657217": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05008" },
+  "1484826440061943879": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05009 / E-M05010" },
+  "1484826443002282096": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05011 / E-M05012" },
+  "1484826446122975374": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05015 / E-M05016" },
+  "1484826447607500841": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05019 • ROCAM" },
+  "1484826450921000960": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05020 / E-M05017" },
+  "1484826454981218424": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05030/E-M05042" },
+  "1484826468918759524": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CPAM5-048" },
+  "1484826473876426903": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CPAM5-061" },
+
+  "1508557841051422842": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COMANDO CPCHOQUE" },
+  "1508558769259548703": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "SUBCOMANDO CPCHOQUE" },
+  "1508559060104908970": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COORDENAÇÃO CPCHOQUE" },
+  "1508559180645269624": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 005" },
+  "1508559202057064589": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 006" },
+  "1508562463103258837": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 007" },
+
+  "1484826485301841991": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Comando BAEP" },
+  "1484826488577720332": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Sub Comando BAEP" },
+  "1484826494370058422": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Coordenador BAEP" },
+  "1484826497360334969": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Supervisão BAEP E-07100" },
+  "1484826500753653770": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Supervisão BAEP E-07300" },
+  "1484826509565759488": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "BAEP COMANDO E-07106" },
+  "1484826513047031859": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "BAEP COMANDO E-07301" },
+  "1484826514888589333": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07090 BLAZER/TRAIL 22" },
+  "1484826518235385948": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-103/203 SW4" },
+  "1484826521574047754": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07104/204 TRAIL-12" },
+  "1484826526439575552": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07104/204/480 TRAIL 12" },
+  "1484826538863235072": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-210/212/213 TRAIL 21/22" },
+  "1484826542407155734": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-214/215/218/220 TRAIL 21" },
+  "1484826545754341386": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07315/418/470/471" },
+  "1484826548753137667": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07381 - ROCAM BAEP" },
+  "1484826552167436410": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07385/389 - ROCAM BAEP" },
+
+  "1484826637877907528": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO AGUIAR - 91000" },
+  "1484826650653888512": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO ROTA - 91001" },
+  "1484826654013652992": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COORDENADOR AGUIAR" },
+  "1484826655577997362": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "ROTA UNO - 91100" },
+  "1484826661542166619": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO 10 - 91102" },
+  "1484826665178890350": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "ROTA 90 - 91090" },
+  "1484826666743234570": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91110 - TRAILBLAZER" },
+  "1484826670925090858": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91111 - TRAILBLAZER" },
+  "1484826676104790098": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91112 - TRAILBLAZER" },
+  "1484826678445477898": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91128 - TRAILBLAZER" },
+  "1484826683847475303": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91132 - TRAILBLAZER" },
+  "1484826696929771662": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91142 - TRAILBLAZER" },
+  "1484826700117311580": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "DEJEM ROTA - 3-387" },
+
+  "1484826721898201250": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "COMANDO ANCHIETA - 92000" },
+  "1484826724813242408": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "SUBCOMANDO ANCHIETA" },
+  "1484826728625864794": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "COORDENADOR ANCHIETA" },
+  "1484826730454843544": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 1 - 92100" },
+  "1484826736288993404": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 2 - 92200" },
+  "1484826739690442833": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 3 - 92300" },
+  "1484826743062925413": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 4 - 92400" },
+  "1484826745655005217": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 111 - 92111" },
+  "1484826747470872607": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 119 - 92119" },
+  "1484826753015742505": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 205 - 92205" },
+  "1484826754819297421": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 212 - 92212" },
+  "1484826757759500358": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 213 - 92213" },
+  "1484826767729627197": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 215 - 92215" },
+  "1484826776562827274": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "APOIO ROCAM - 92424" },
+  "1484826780203487272": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ROCAM 425 - 92425" },
+  "1484826783193763900": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ROCAM 427 - 92427" },
+
+  "1484826799098564729": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "COMANDO HUMAITÁ - 93000" },
+  "1484826802156470353": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "SUBCOMANDO HUMAITÁ" },
+  "1484826803691589682": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "COORDENADOR HUMAITÁ" },
+  "1484826807562666128": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "HUMAITÁ COMANDO" },
+  "1484826811488665610": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "HUMAITÁ (UNO, DOIS, TRÊS)" },
+  "1484826814143660123": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "Humaitá - 93121" },
+  "1484826819969417216": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "Humaitá - 93122" },
+  "1484826821781360650": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "Humaitá - 93129" },
+  "1484826827078897674": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "Humaitá - 93213" },
+
+  "1484826840295145493": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COMANDO 4ºBPCHq • 94000" },
+  "1484826844493778984": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "SUBCOMANDO 4ºBPCHq" },
+  "1484826845957591150": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COORDOP 4ºBPCHq • 94002" },
+  "1484826847857344553": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COMANDO COE • 94003" },
+  "1484826850189381662": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE COMANDO UNO • 94100" },
+  "1484826852651438201": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE COMANDO DOIS • 94200" },
+  "1484826855264620596": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE • 94101" },
+  "1484826858062086154": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE • 94102" },
+  "1484826859936940032": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE • 94103" },
+  "1484826861610602586": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE • 94201" },
+  "1484826863346909296": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "GATE COMANDO TRÊS" },
+  "1484826865284681750": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "GATE • 94303" },
+  "1484826867596001280": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "GATE • 94301" }
+};
+
+const pontosRegistrados = new Map();
 
 const sessoes = new Map();
 const pendentes = new Map();
@@ -783,5 +955,115 @@ client.on(Events.InviteCreate, async (invite) => {
 
   canal.send({ embeds: [embed] }).catch(() => {});
 });
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+  console.log("🎙️ VOICE UPDATE");
+  console.log("OLD:", oldState.channelId);
+  console.log("NEW:", newState.channelId);
+  console.log("MEMBRO:", newState.member?.user?.tag || "Não identificado");
+  try {
+    const canalAtual = newState.channel;
+    const canalAntigo = oldState.channel;
 
+    if (canalAntigo && CANALETAS_PONTO[canalAntigo.id]) {
+      const membrosAntigo = canalAntigo.members.filter(m => !m.user.bot);
+
+      if (membrosAntigo.size < 2) {
+        pontosRegistrados.delete(canalAntigo.id);
+      }
+    }
+
+    if (!canalAtual) return;
+
+    const dadosCanaleta = CANALETAS_PONTO[canalAtual.id];
+    if (!dadosCanaleta) return;
+
+    const membros = canalAtual.members.filter(m => !m.user.bot);
+    const quantidade = membros.size;
+
+    if (quantidade < 2) {
+      pontosRegistrados.delete(canalAtual.id);
+      return;
+    }
+
+    if (quantidade > 4) return;
+
+    if (pontosRegistrados.has(canalAtual.id)) return;
+
+    const agora = new Date();
+
+    const data = agora.toLocaleDateString("pt-BR", {
+      timeZone: "America/Sao_Paulo"
+    });
+
+    const hora = agora.toLocaleTimeString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    const integrantes = membros
+      .map(m => `• ${m.displayName}`)
+      .join("\n");
+
+    const embed = new EmbedBuilder()
+      .setColor("#2B2D31")
+      .setTitle("📋 Ponto Registrado")
+      .setDescription("🚔 Uma guarnição iniciou patrulhamento em canaleta operacional.")
+      .addFields(
+        {
+          name: "👮 Integrantes da Viatura",
+          value: integrantes || "Não identificado"
+        },
+        {
+          name: "📅 Data",
+          value: data,
+          inline: true
+        },
+        {
+          name: "🕒 Horário de Entrada",
+          value: hora,
+          inline: true
+        },
+        {
+          name: "🏢 Batalhão",
+          value: dadosCanaleta.batalhao,
+          inline: true
+        },
+        {
+          name: "🚓 Canaleta / Prefixo",
+          value: dadosCanaleta.nome
+        }
+      )
+      .setFooter({
+        text: "SSP Litoral Paulista • Sistema Automático de Ponto"
+      })
+      .setTimestamp();
+
+    const canalLogBatalhaoId = CANAIS_LOG_PONTO[dadosCanaleta.batalhaoKey];
+
+    const canalLogBatalhao = canalLogBatalhaoId
+      ? await newState.guild.channels.fetch(canalLogBatalhaoId).catch(() => null)
+      : null;
+
+    const canalLogGeral = await newState.guild.channels
+      .fetch(CANAL_LOG_PONTOS_GERAL)
+      .catch(() => null);
+
+    if (canalLogBatalhao) {
+      await canalLogBatalhao.send({ embeds: [embed] }).catch(() => {});
+    }
+
+    if (canalLogGeral && canalLogGeral.id !== canalLogBatalhao?.id) {
+      await canalLogGeral.send({ embeds: [embed] }).catch(() => {});
+    }
+
+    pontosRegistrados.set(canalAtual.id, {
+      canalId: canalAtual.id,
+      registradoEm: Date.now(),
+      membros: membros.map(m => m.id)
+    });
+  } catch (err) {
+    console.error("Erro no sistema de ponto automático:", err);
+  }
+});
 client.login(process.env.TOKEN);
