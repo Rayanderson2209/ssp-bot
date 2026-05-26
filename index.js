@@ -222,7 +222,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await membro.roles.add(cursos[cursoSelecionado].cargo).catch(() => {});
       }
 
-      const novoNick = `${patente.insignia} ${sessao.nome} | ${unidade.nome}`;
+      const novoNick = `${patente.insignia} ${sessao.nome} | ${sessao.rg}`;
+
       await membro.setNickname(novoNick).catch(() => {});
 
       const cursosTexto = sessao.cursos.length
