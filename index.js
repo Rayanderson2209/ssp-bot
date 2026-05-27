@@ -11,10 +11,12 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
   ModalBuilder,
-  TextInputBuilder,
+ TextInputBuilder,
   TextInputStyle,
   PermissionsBitField,
-  ChannelType
+  ChannelType,
+  SlashCommandBuilder,
+  AuditLogEvent
 } = require("discord.js");
 
 const client = new Client({
@@ -916,6 +918,208 @@ client.on(Events.InteractionCreate, async (interaction) => {
         content: "❌ Ocorreu um erro ao processar sua solicitação.",
         ephemeral: true
       }).catch(() => {});
+});
+    }
+    if (interaction.isChatInputCommand() && interaction.commandName === "painel-ticket") {
+      const embed = new EmbedBuilder()
+        .setColor("#ff7a00")
+        .setTitle("P1 - RECURSOS HUMANOS")
+        .setDescription(
+          "🚨 **P1 - RECURSOS HUMANOS | SSP LITORAL PAULISTA** 🚨\n\n" +
+          "Ao abrir o atendimento, informe corretamente os dados solicitados no formulário.\n\n" +
+          "📌 **Atendimentos disponíveis:**\n" +
+          "• Atualização Funcional\n" +
+          "• Baixa de Funcional\n" +
+          "• Reportar Problema\n" +
+          "• Outros Assuntos\n\n" +
+          "⚠️ **Mantenha postura no canal.**\n" +
+          "Sem flood, sem cobranças desnecessárias e aguarde a equipe de serviço.\n\n" +
+          "**P1 - PMESP**\n" +
+          "Hierarquia e disciplina."
+        )
+        .setImage(TICKET_BANNER_URL)
+        .setFooter({ text: "SSP Litoral Paulista • Sistema de Atendimento P1/RH" });
+
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId("selecionar_ticket")
+        .setPlaceholder("Escolha uma opção...")
+        .addOptions(
+          Object.entries(TIPOS_TICKET).map(([value, item]) => ({
+            label: item.nome,
+            description: item.descricao,
+            emoji: item.emoji,
+            value
+          }))
+        );
+
+      return interaction.reply({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(menu)]
+      });
+    }
+
+    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_ticket") {
+      const tipo = interaction.values[0];
+      const dadosTipo = TIPOS_TICKET[tipo];
+
+      const modal = new ModalBuilder()
+        .setCustomId(`modal_ticket_${tipo}`)
+        .setTitle(`Atendimento - ${dadosTipo.nome}`);
+
+      const nomeInput = new TextInputBuilder()
+        .setCustomId("nome")
+        .setLabel("Nome completo")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const rgInput = new TextInputBuilder()
+        .setCustomId("rg")
+        .setLabel("RG/Passaporte")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const batalhaoInput = new TextInputBuilder()
+        .setCustomId("batalhao")
+        .setLabel("Batalhão/Unidade")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const relatoInput = new TextInputBuilder()
+        .setCustomId("relato")
+        .setLabel("Relate detalhadamente sua solicitação")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(nomeInput),
+        new ActionRowBuilder().addComponents(rgInput),
+        new ActionRowBuilder().addComponents(batalhaoInput),
+        new ActionRowBuilder().addComponents(relatoInput)
+      );
+
+      return interaction.showModal(modal);
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId.startsWith("modal_ticket_")) {
+      const tipo = interaction.customId.replace("modal_ticket_", "");
+      const dadosTipo = TIPOS_TICKET[tipo];
+
+      const nome = interaction.fields.getTextInputValue("nome");
+      const rg = interaction.fields.getTextInputValue("rg");
+      const batalhao = interaction.fields.getTextInputValue("batalhao");
+      const relato = interaction.fields.getTextInputValue("relato");
+
+      const nomeCanal = `ticket-${interaction.user.username}`
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .slice(0, 90);
+
+      const overwrites = [
+        {
+          id: interaction.guild.roles.everyone.id,
+          deny: [PermissionsBitField.Flags.ViewChannel]
+        },
+        {
+          id: interaction.user.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory
+          ]
+        },
+        ...CARGOS_TICKET.map(cargoId => ({
+          id: cargoId,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory
+          ]
+        }))
+      ];
+
+      const canalTicket = await interaction.guild.channels.create({
+        name: nomeCanal,
+        type: ChannelType.GuildText,
+        parent: CATEGORIA_TICKETS,
+        permissionOverwrites: overwrites
+      });
+
+      const embedTicket = new EmbedBuilder()
+        .setColor("#ff7a00")
+        .setTitle(`${dadosTipo.emoji} Atendimento Aberto - ${dadosTipo.nome}`)
+        .setDescription("📂 Um novo atendimento foi aberto no sistema P1/RH.")
+        .addFields(
+          { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
+          { name: "🪪 Nome", value: nome, inline: true },
+          { name: "🆔 RG", value: rg, inline: true },
+          { name: "🏢 Batalhão", value: batalhao, inline: true },
+          { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
+          { name: "📝 Relato/Solicitação", value: relato.slice(0, 1000) }
+        )
+        .setImage(TICKET_BANNER_URL)
+        .setFooter({ text: "SSP Litoral Paulista • Atendimento P1/RH" })
+        .setTimestamp();
+
+      const fechar = new ButtonBuilder()
+        .setCustomId("fechar_ticket")
+        .setLabel("Fechar Ticket")
+        .setEmoji("🔒")
+        .setStyle(ButtonStyle.Danger);
+
+      await canalTicket.send({
+        content: `${interaction.user} atendimento aberto. Aguarde a equipe responsável.`,
+        embeds: [embedTicket],
+        components: [new ActionRowBuilder().addComponents(fechar)]
+      });
+
+      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
+
+      if (canalLog) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#00FF7F")
+          .setTitle("🎫 Ticket Aberto")
+          .addFields(
+            { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
+            { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
+            { name: "📍 Canal", value: `${canalTicket}`, inline: true }
+          )
+          .setImage(TICKET_BANNER_URL)
+          .setTimestamp();
+
+        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+      }
+
+      return interaction.reply({
+        content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
+        ephemeral: true
+      });
+    }
+
+    if (interaction.isButton() && interaction.customId === "fechar_ticket") {
+      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
+
+      if (canalLog) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#FF0000")
+          .setTitle("🔒 Ticket Fechado")
+          .addFields(
+            { name: "📍 Canal", value: interaction.channel.name, inline: true },
+            { name: "👮 Fechado por", value: `${interaction.user}`, inline: true }
+          )
+          .setImage(TICKET_BANNER_URL)
+          .setTimestamp();
+
+        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+      }
+
+      await interaction.reply({
+        content: "🔒 Ticket fechado. Este canal será excluído em 5 segundos.",
+        ephemeral: false
+      });
+
+      setTimeout(() => {
+        interaction.channel.delete().catch(() => {});
+      }, 5000);
     }
   }
 });
@@ -1139,206 +1343,5 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   } catch (err) {
     console.error("Erro no sistema de ponto automático:", err);
   }
-    if (interaction.isChatInputCommand() && interaction.commandName === "painel-ticket") {
-      const embed = new EmbedBuilder()
-        .setColor("#ff7a00")
-        .setTitle("P1 - RECURSOS HUMANOS")
-        .setDescription(
-          "🚨 **P1 - RECURSOS HUMANOS | SSP LITORAL PAULISTA** 🚨\n\n" +
-          "Ao abrir o atendimento, informe corretamente os dados solicitados no formulário.\n\n" +
-          "📌 **Atendimentos disponíveis:**\n" +
-          "• Atualização Funcional\n" +
-          "• Baixa de Funcional\n" +
-          "• Reportar Problema\n" +
-          "• Outros Assuntos\n\n" +
-          "⚠️ **Mantenha postura no canal.**\n" +
-          "Sem flood, sem cobranças desnecessárias e aguarde a equipe de serviço.\n\n" +
-          "**P1 - PMESP**\n" +
-          "Hierarquia e disciplina."
-        )
-        .setImage(TICKET_BANNER_URL)
-        .setFooter({ text: "SSP Litoral Paulista • Sistema de Atendimento P1/RH" });
-
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId("selecionar_ticket")
-        .setPlaceholder("Escolha uma opção...")
-        .addOptions(
-          Object.entries(TIPOS_TICKET).map(([value, item]) => ({
-            label: item.nome,
-            description: item.descricao,
-            emoji: item.emoji,
-            value
-          }))
-        );
-
-      return interaction.reply({
-        embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(menu)]
-      });
-    }
-
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_ticket") {
-      const tipo = interaction.values[0];
-      const dadosTipo = TIPOS_TICKET[tipo];
-
-      const modal = new ModalBuilder()
-        .setCustomId(`modal_ticket_${tipo}`)
-        .setTitle(`Atendimento - ${dadosTipo.nome}`);
-
-      const nomeInput = new TextInputBuilder()
-        .setCustomId("nome")
-        .setLabel("Nome completo")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-      const rgInput = new TextInputBuilder()
-        .setCustomId("rg")
-        .setLabel("RG/Passaporte")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-      const batalhaoInput = new TextInputBuilder()
-        .setCustomId("batalhao")
-        .setLabel("Batalhão/Unidade")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-      const relatoInput = new TextInputBuilder()
-        .setCustomId("relato")
-        .setLabel("Relate detalhadamente sua solicitação")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
-
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(nomeInput),
-        new ActionRowBuilder().addComponents(rgInput),
-        new ActionRowBuilder().addComponents(batalhaoInput),
-        new ActionRowBuilder().addComponents(relatoInput)
-      );
-
-      return interaction.showModal(modal);
-    }
-
-    if (interaction.isModalSubmit() && interaction.customId.startsWith("modal_ticket_")) {
-      const tipo = interaction.customId.replace("modal_ticket_", "");
-      const dadosTipo = TIPOS_TICKET[tipo];
-
-      const nome = interaction.fields.getTextInputValue("nome");
-      const rg = interaction.fields.getTextInputValue("rg");
-      const batalhao = interaction.fields.getTextInputValue("batalhao");
-      const relato = interaction.fields.getTextInputValue("relato");
-
-      const nomeCanal = `ticket-${interaction.user.username}`
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, "-")
-        .slice(0, 90);
-
-      const overwrites = [
-        {
-          id: interaction.guild.roles.everyone.id,
-          deny: [PermissionsBitField.Flags.ViewChannel]
-        },
-        {
-          id: interaction.user.id,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages,
-            PermissionsBitField.Flags.ReadMessageHistory
-          ]
-        },
-        ...CARGOS_TICKET.map(cargoId => ({
-          id: cargoId,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages,
-            PermissionsBitField.Flags.ReadMessageHistory
-          ]
-        }))
-      ];
-
-      const canalTicket = await interaction.guild.channels.create({
-        name: nomeCanal,
-        type: ChannelType.GuildText,
-        parent: CATEGORIA_TICKETS,
-        permissionOverwrites: overwrites
-      });
-
-      const embedTicket = new EmbedBuilder()
-        .setColor("#ff7a00")
-        .setTitle(`${dadosTipo.emoji} Atendimento Aberto - ${dadosTipo.nome}`)
-        .setDescription("📂 Um novo atendimento foi aberto no sistema P1/RH.")
-        .addFields(
-          { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
-          { name: "🪪 Nome", value: nome, inline: true },
-          { name: "🆔 RG", value: rg, inline: true },
-          { name: "🏢 Batalhão", value: batalhao, inline: true },
-          { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
-          { name: "📝 Relato/Solicitação", value: relato.slice(0, 1000) }
-        )
-        .setImage(TICKET_BANNER_URL)
-        .setFooter({ text: "SSP Litoral Paulista • Atendimento P1/RH" })
-        .setTimestamp();
-
-      const fechar = new ButtonBuilder()
-        .setCustomId("fechar_ticket")
-        .setLabel("Fechar Ticket")
-        .setEmoji("🔒")
-        .setStyle(ButtonStyle.Danger);
-
-      await canalTicket.send({
-        content: `${interaction.user} atendimento aberto. Aguarde a equipe responsável.`,
-        embeds: [embedTicket],
-        components: [new ActionRowBuilder().addComponents(fechar)]
-      });
-
-      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
-
-      if (canalLog) {
-        const logEmbed = new EmbedBuilder()
-          .setColor("#00FF7F")
-          .setTitle("🎫 Ticket Aberto")
-          .addFields(
-            { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
-            { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
-            { name: "📍 Canal", value: `${canalTicket}`, inline: true }
-          )
-          .setImage(TICKET_BANNER_URL)
-          .setTimestamp();
-
-        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
-      }
-
-      return interaction.reply({
-        content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
-        ephemeral: true
-      });
-    }
-
-    if (interaction.isButton() && interaction.customId === "fechar_ticket") {
-      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
-
-      if (canalLog) {
-        const logEmbed = new EmbedBuilder()
-          .setColor("#FF0000")
-          .setTitle("🔒 Ticket Fechado")
-          .addFields(
-            { name: "📍 Canal", value: interaction.channel.name, inline: true },
-            { name: "👮 Fechado por", value: `${interaction.user}`, inline: true }
-          )
-          .setImage(TICKET_BANNER_URL)
-          .setTimestamp();
-
-        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
-      }
-
-      await interaction.reply({
-        content: "🔒 Ticket fechado. Este canal será excluído em 5 segundos.",
-        ephemeral: false
-      });
-
-      setTimeout(() => {
-        interaction.channel.delete().catch(() => {});
-      }, 5000);
-    }
 });
 client.login(process.env.TOKEN);
