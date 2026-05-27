@@ -78,7 +78,6 @@ const CANALETAS_PONTO = {"1484826105289506836": { batalhaoKey: "QCG", batalhao: 
 "1484826320436199544": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Comando - M-22001" },"1484826323338919957": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Tático Comando - M-22011" },"1484826325679341598": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Tático 90 - M-22090" },"1484826330037227520": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22013 - Tático 13" },"1484826331677200506": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22014 - Tático 14" },"1484826336437735485": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22015 - Tático 15" },"1484826339499315294": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22016 - Tático 16" },"1484826343328977020": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22017 - Tático 17" },"1484826352044609547": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22019 - Tático 19" },"1484826356104564816": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22028 - Tático 28" },"1484826357488947222": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "COMANDO ROCAM" },"1484826360412377138": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "CGP ROCAM (Trail 23)" },"1484826364841558069": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "ROCAM UNO" },"1484826375314735194": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "ROCAM DOIS" },
 
 "1484826382998569081": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "M-3-550/M-3 555/M-3 547" },"1484826386878300242": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 10 (AS350-B3)" },"1484826389843808308": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 19 (AS350-B3)" },"1484826393056378901": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 23 (AS350) GRAU" },"1484826396835713076": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 32 (AW109)" },"1484826400241225830": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 33 (EC135)" },
-
 "1484826411897458738": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "Comando OESTE | E-M05000" },"1484826415395242054": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CAEP Comando | E-M05001" },"1484826419933614230": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "Coordenador CAEP | E-M05002" },"1484826421367930943": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05004" },"1484826428745711626": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CAEP 90 | E-M05090" },"1484826432524910733": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05006" },"1484826436299657217": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05008" },"1484826440061943879": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05009 / E-M05010" },"1484826443002282096": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05011 / E-M05012" },"1484826446122975374": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05015 / E-M05016" },"1484826447607500841": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05019 • ROCAM" },"1484826450921000960": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05020 / E-M05017" },"1484826454981218424": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05030/E-M05042" },"1484826468918759524": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CPAM5-048" },"1484826473876426903": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CPAM5-061" },
 
 "1508557841051422842": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COMANDO CPCHOQUE" },"1508558769259548703": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "SUBCOMANDO CPCHOQUE" },"1508559060104908970": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COORDENAÇÃO CPCHOQUE" },"1508559180645269624": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 005" },"1508559202057064589": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 006" },"1508562463103258837": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 007" },
@@ -90,7 +89,6 @@ const CANALETAS_PONTO = {"1484826105289506836": { batalhaoKey: "QCG", batalhao: 
 "1484826721898201250": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "COMANDO ANCHIETA - 92000" },"1484826724813242408": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "SUBCOMANDO ANCHIETA" },"1484826728625864794": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "COORDENADOR ANCHIETA" },"1484826730454843544": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 1 - 92100" },"1484826736288993404": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 2 - 92200" },"1484826739690442833": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 3 - 92300" },"1484826743062925413": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 4 - 92400" },"1484826745655005217": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 111 - 92111" },"1484826747470872607": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 119 - 92119" },"1484826753015742505": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 205 - 92205" },"1484826754819297421": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 212 - 92212" },"1484826757759500358": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 213 - 92213" },"1484826767729627197": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 215 - 92215" },"1484826776562827274": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "APOIO ROCAM - 92424" },"1484826780203487272": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ROCAM 425 - 92425" },"1484826783193763900": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ROCAM 427 - 92427" },
 
 "1484826799098564729": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "COMANDO HUMAITÁ - 93000" },"1484826802156470353": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "SUBCOMANDO HUMAITÁ" },"1484826803691589682": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "COORDENADOR HUMAITÁ" },"1484826807562666128": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "HUMAITÁ COMANDO" },"1484826811488665610": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "HUMAITÁ (UNO, DOIS, TRÊS)" },"1484826814143660123": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "Humaitá - 93121" },"1484826819969417216": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "Humaitá - 93122" },"1484826821781360650": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "Humaitá - 93129" },"1484826827078897674": { batalhaoKey: "HUMAITA", batalhao: "Humaitá", nome: "Humaitá - 93213" },
-
 "1484826840295145493": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COMANDO 4ºBPCHq • 94000" },"1484826844493778984": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "SUBCOMANDO 4ºBPCHq" },"1484826845957591150": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COORDOP 4ºBPCHq • 94002" },"1484826847857344553": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COMANDO COE • 94003" },"1484826850189381662": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE COMANDO UNO • 94100" },"1484826852651438201": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE COMANDO DOIS • 94200" },"1484826855264620596": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE • 94101" },"1484826858062086154": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE • 94102" },"1484826859936940032": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE • 94103" },"1484826861610602586": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "COE • 94201" },"1484826863346909296": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "GATE COMANDO TRÊS" },"1484826865284681750": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "GATE • 94303" },"1484826867596001280": { batalhaoKey: "4BPCHOQUE", batalhao: "4º BPChoque", nome: "GATE • 94301" }};
 const canaisBI = {ssp: "1484826324530102303",qcg: "1484826160222441523",corregedoria: "1484826324530102303",cpchoque: "1500288574162210886","22bpm": "1484826380788174868",forca_tatica: "1484826425331548180",cavpm: "1484826456826843188",caep: "1484826491970912369",baep: "1484826529186844693",rota: "1484826591640031243",anchieta: "1484826628935778344",humaita: "1484826663530401792","4bpchoque": "1484826703304855645"};
 
@@ -167,7 +165,6 @@ client.once("ready", async () => {
       .toJSON()
   ]);
 });
-
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
     if (interaction.isChatInputCommand() && interaction.commandName === "boletim") {
@@ -360,7 +357,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: [new ActionRowBuilder().addComponents(botao)]
       });
     }
-
     if (interaction.isButton() && interaction.customId === "abrir_funcional") {
       const modal = new ModalBuilder()
         .setCustomId("modal_funcional")
@@ -518,10 +514,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       sessoes.delete(interaction.user.id);
     }
-   if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
-await interaction.deferUpdate();
+
+    if (interaction.isButton() && interaction.customId.startsWith("aprovar_funcional_")) {
+      await interaction.deferUpdate();
+
       if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
-        return interaction.reply({
+        return interaction.followUp({
           content: "❌ Você não tem permissão para aprovar funcionais.",
           ephemeral: true
         });
@@ -531,7 +529,7 @@ await interaction.deferUpdate();
       const dados = pendentes.get(userId);
 
       if (!dados) {
-        return interaction.reply({
+        return interaction.followUp({
           content: "❌ Solicitação não encontrada ou o bot foi reiniciado.",
           ephemeral: true
         });
@@ -540,12 +538,11 @@ await interaction.deferUpdate();
       const membro = await interaction.guild.members.fetch(userId).catch(() => null);
 
       if (!membro) {
-        return interaction.reply({
+        return interaction.followUp({
           content: "❌ Membro não encontrado no servidor.",
           ephemeral: true
         });
       }
-
       const patente = hierarquias[dados.patenteKey];
       const unidade = unidades[dados.unidadeKey];
 
@@ -571,30 +568,28 @@ await interaction.deferUpdate();
         .setColor("#00FF7F")
         .setFooter({ text: `Funcional aprovada por ${interaction.user.tag}` });
 
-     await interaction.message.edit({
-  content: "✅ Funcional aceita.",
-  embeds: [aprovadoEmbed],
-  components: []
-});
+      await interaction.message.edit({
+        content: "✅ Funcional aceita.",
+        embeds: [aprovadoEmbed],
+        components: []
+      });
     }
 
-    if (interaction.isButton() && interaction.customId.startsWith("aprovar_funcional_")) {
+    if (interaction.isButton() && interaction.customId.startsWith("negar_funcional_")) {
+      await interaction.deferUpdate();
 
-    await interaction.deferUpdate();
-
-    if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+      if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
         return interaction.followUp({
-            content: "❌ Você não tem permissão para aprovar funcionais.",
-            ephemeral: true
+          content: "❌ Você não tem permissão para negar funcionais.",
+          ephemeral: true
         });
-    }
+      }
 
-    const userId = interaction.customId.replace("aprovar_funcional_", "");
-
+      const userId = interaction.customId.replace("negar_funcional_", "");
       const dados = pendentes.get(userId);
 
       if (!dados) {
-        return interaction.reply({
+        return interaction.followUp({
           content: "❌ Solicitação não encontrada ou o bot foi reiniciado.",
           ephemeral: true
         });
@@ -619,7 +614,7 @@ await interaction.deferUpdate();
         .setColor("#FF0000")
         .setFooter({ text: `Funcional negada por ${interaction.user.tag}` });
 
-      await interaction.update({
+      await interaction.message.edit({
         content: "❌ Funcional negada. O membro ficou apenas com o cargo VUNESP.",
         embeds: [negadoEmbed],
         components: []
@@ -717,7 +712,6 @@ await interaction.deferUpdate();
         .toLowerCase()
         .replace(/[^a-z0-9-]/g, "-")
         .slice(0, 90);
-
       const overwrites = [
         {
           id: interaction.guild.roles.everyone.id,
@@ -731,16 +725,16 @@ await interaction.deferUpdate();
             PermissionsBitField.Flags.ReadMessageHistory
           ]
         },
-      ...CARGOS_TICKET
-  .filter(cargoId => interaction.guild.roles.cache.has(cargoId))
-  .map(cargoId => ({
-    id: cargoId,
-    allow: [
-      PermissionsBitField.Flags.ViewChannel,
-      PermissionsBitField.Flags.SendMessages,
-      PermissionsBitField.Flags.ReadMessageHistory
-    ]
-  }))
+        ...CARGOS_TICKET
+          .filter(cargoId => interaction.guild.roles.cache.has(cargoId))
+          .map(cargoId => ({
+            id: cargoId,
+            allow: [
+              PermissionsBitField.Flags.ViewChannel,
+              PermissionsBitField.Flags.SendMessages,
+              PermissionsBitField.Flags.ReadMessageHistory
+            ]
+          }))
       ];
 
       const canalTicket = await interaction.guild.channels.create({
@@ -794,12 +788,14 @@ await interaction.deferUpdate();
 
         await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
       }
-     await interaction.reply({
-  content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
-  ephemeral: true
-});
 
-return;
+      await interaction.reply({
+        content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
+        ephemeral: true
+      });
+
+      return;
+    }
 
     if (interaction.isButton() && interaction.customId === "fechar_ticket") {
       const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
@@ -886,7 +882,6 @@ client.on(Events.GuildMemberRemove, async (member) => {
     }
   }
 });
-
 client.on(Events.GuildBanAdd, async (ban) => {
   const canal = client.channels.cache.get(LOG_EXONERACOES);
   if (!canal) return;
