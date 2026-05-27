@@ -3,19 +3,17 @@ require("dotenv").config();
 const {
   Client,
   GatewayIntentBits,
-  Partials,
+  EmbedBuilder,
+  Events,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
+  StringSelectMenuBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  Events,
-  StringSelectMenuBuilder,
-  SlashCommandBuilder,
   PermissionsBitField,
-  AuditLogEvent
+  ChannelType
 } = require("discord.js");
 
 const client = new Client({
@@ -39,6 +37,76 @@ const client = new Client({
 const CANAL_FUNCIONAL = "1484826121697628221";
 const CANAL_LOG_FUNCIONAL = "1484826214915899412";
 const CARGO_VUNESP = "1484825992739553321";
+const CATEGORIA_TICKETS = "1484826209761361940";
+const CANAL_LOG_TICKETS = "1484826220905627698";
+const TICKET_BANNER_URL = "https://cdn.discordapp.com/attachments/1402409732307685446/1508603952944513034/Logo_ssp_litoral.png?ex=6a1775ea&is=6a16246a&hm=9f5f28b3c8d74343efef2539234675316a894643251ae272d876af104df83085&";
+
+const CARGOS_TICKET = [
+  "1484825744390754407",
+  "1484825745313370112",
+
+  "1500286435910226172",
+  "1500287874069696572",
+
+  "1484825780310638643",
+  "1484825781187379290",
+
+  "1484825784387502180",
+  "1484825799080153168",
+
+  "1484825785532547073",
+  "1484825800141176873",
+
+  "1484825788611039233",
+  "1484825803253485669",
+
+  "1484825787373981837",
+  "1484825802271887360",
+
+  "1484825789429055489",
+  "1484825803920380085",
+
+  "1484825790800593037",
+  "1484825805107367947",
+
+  "1484825792075796551",
+  "1484825806478905484",
+
+  "1484825793120043038",
+  "1484825807355383929",
+
+  "1484825743572598784",
+  "1484825747242618881",
+  "1484825753857294527",
+
+  "1484825834333143173"
+];
+
+const TIPOS_TICKET = {
+  outros: {
+    nome: "Outros Assuntos",
+    emoji: "ℹ️",
+    descricao: "Solicitar atendimento para outros tipos de assuntos."
+  },
+
+  atualizacao: {
+    nome: "Atualização Funcional",
+    emoji: "🪪",
+    descricao: "Modificar cargos, editar perfil e alterar dados funcionais."
+  },
+
+  baixa: {
+    nome: "Baixa de Funcional",
+    emoji: "✍️",
+    descricao: "Solicitar baixa em funcional PM."
+  },
+
+  problema: {
+    nome: "Reportar Problema",
+    emoji: "🤖",
+    descricao: "Relatar problemas técnicos da PM, Discord ou cidade."
+  }
+};
 
 const LOG_ENTRADAS = "1484826127531773974";
 const LOG_SAIDAS = "1484826130249810104";
@@ -359,7 +427,12 @@ client.once("ready", async () => {
     new SlashCommandBuilder()
       .setName("boletim")
       .setDescription("Criar e publicar boletim interno.")
-      .toJSON()
+      .toJSON(),
+
+    new SlashCommandBuilder()
+      .setName("painel-ticket")
+      .setDescription("Envia o painel fixo de atendimento P1/RH.")
+      .toJSON(),
   ]);
 });
 
@@ -1065,5 +1138,206 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   } catch (err) {
     console.error("Erro no sistema de ponto automático:", err);
   }
+    if (interaction.isChatInputCommand() && interaction.commandName === "painel-ticket") {
+      const embed = new EmbedBuilder()
+        .setColor("#ff7a00")
+        .setTitle("P1 - RECURSOS HUMANOS")
+        .setDescription(
+          "🚨 **P1 - RECURSOS HUMANOS | SSP LITORAL PAULISTA** 🚨\n\n" +
+          "Ao abrir o atendimento, informe corretamente os dados solicitados no formulário.\n\n" +
+          "📌 **Atendimentos disponíveis:**\n" +
+          "• Atualização Funcional\n" +
+          "• Baixa de Funcional\n" +
+          "• Reportar Problema\n" +
+          "• Outros Assuntos\n\n" +
+          "⚠️ **Mantenha postura no canal.**\n" +
+          "Sem flood, sem cobranças desnecessárias e aguarde a equipe de serviço.\n\n" +
+          "**P1 - PMESP**\n" +
+          "Hierarquia e disciplina."
+        )
+        .setImage(TICKET_BANNER_URL)
+        .setFooter({ text: "SSP Litoral Paulista • Sistema de Atendimento P1/RH" });
+
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId("selecionar_ticket")
+        .setPlaceholder("Escolha uma opção...")
+        .addOptions(
+          Object.entries(TIPOS_TICKET).map(([value, item]) => ({
+            label: item.nome,
+            description: item.descricao,
+            emoji: item.emoji,
+            value
+          }))
+        );
+
+      return interaction.reply({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(menu)]
+      });
+    }
+
+    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_ticket") {
+      const tipo = interaction.values[0];
+      const dadosTipo = TIPOS_TICKET[tipo];
+
+      const modal = new ModalBuilder()
+        .setCustomId(`modal_ticket_${tipo}`)
+        .setTitle(`Atendimento - ${dadosTipo.nome}`);
+
+      const nomeInput = new TextInputBuilder()
+        .setCustomId("nome")
+        .setLabel("Nome completo")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const rgInput = new TextInputBuilder()
+        .setCustomId("rg")
+        .setLabel("RG/Passaporte")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const batalhaoInput = new TextInputBuilder()
+        .setCustomId("batalhao")
+        .setLabel("Batalhão/Unidade")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const relatoInput = new TextInputBuilder()
+        .setCustomId("relato")
+        .setLabel("Relate detalhadamente sua solicitação")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(nomeInput),
+        new ActionRowBuilder().addComponents(rgInput),
+        new ActionRowBuilder().addComponents(batalhaoInput),
+        new ActionRowBuilder().addComponents(relatoInput)
+      );
+
+      return interaction.showModal(modal);
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId.startsWith("modal_ticket_")) {
+      const tipo = interaction.customId.replace("modal_ticket_", "");
+      const dadosTipo = TIPOS_TICKET[tipo];
+
+      const nome = interaction.fields.getTextInputValue("nome");
+      const rg = interaction.fields.getTextInputValue("rg");
+      const batalhao = interaction.fields.getTextInputValue("batalhao");
+      const relato = interaction.fields.getTextInputValue("relato");
+
+      const nomeCanal = `ticket-${interaction.user.username}`
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .slice(0, 90);
+
+      const overwrites = [
+        {
+          id: interaction.guild.roles.everyone.id,
+          deny: [PermissionsBitField.Flags.ViewChannel]
+        },
+        {
+          id: interaction.user.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory
+          ]
+        },
+        ...CARGOS_TICKET.map(cargoId => ({
+          id: cargoId,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory
+          ]
+        }))
+      ];
+
+      const canalTicket = await interaction.guild.channels.create({
+        name: nomeCanal,
+        type: ChannelType.GuildText,
+        parent: CATEGORIA_TICKETS,
+        permissionOverwrites: overwrites
+      });
+
+      const embedTicket = new EmbedBuilder()
+        .setColor("#ff7a00")
+        .setTitle(`${dadosTipo.emoji} Atendimento Aberto - ${dadosTipo.nome}`)
+        .setDescription("📂 Um novo atendimento foi aberto no sistema P1/RH.")
+        .addFields(
+          { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
+          { name: "🪪 Nome", value: nome, inline: true },
+          { name: "🆔 RG", value: rg, inline: true },
+          { name: "🏢 Batalhão", value: batalhao, inline: true },
+          { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
+          { name: "📝 Relato/Solicitação", value: relato.slice(0, 1000) }
+        )
+        .setImage(TICKET_BANNER_URL)
+        .setFooter({ text: "SSP Litoral Paulista • Atendimento P1/RH" })
+        .setTimestamp();
+
+      const fechar = new ButtonBuilder()
+        .setCustomId("fechar_ticket")
+        .setLabel("Fechar Ticket")
+        .setEmoji("🔒")
+        .setStyle(ButtonStyle.Danger);
+
+      await canalTicket.send({
+        content: `${interaction.user} atendimento aberto. Aguarde a equipe responsável.`,
+        embeds: [embedTicket],
+        components: [new ActionRowBuilder().addComponents(fechar)]
+      });
+
+      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
+
+      if (canalLog) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#00FF7F")
+          .setTitle("🎫 Ticket Aberto")
+          .addFields(
+            { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
+            { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
+            { name: "📍 Canal", value: `${canalTicket}`, inline: true }
+          )
+          .setImage(TICKET_BANNER_URL)
+          .setTimestamp();
+
+        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+      }
+
+      return interaction.reply({
+        content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
+        ephemeral: true
+      });
+    }
+
+    if (interaction.isButton() && interaction.customId === "fechar_ticket") {
+      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
+
+      if (canalLog) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#FF0000")
+          .setTitle("🔒 Ticket Fechado")
+          .addFields(
+            { name: "📍 Canal", value: interaction.channel.name, inline: true },
+            { name: "👮 Fechado por", value: `${interaction.user}`, inline: true }
+          )
+          .setImage(TICKET_BANNER_URL)
+          .setTimestamp();
+
+        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+      }
+
+      await interaction.reply({
+        content: "🔒 Ticket fechado. Este canal será excluído em 5 segundos.",
+        ephemeral: false
+      });
+
+      setTimeout(() => {
+        interaction.channel.delete().catch(() => {});
+      }, 5000);
+    }
 });
 client.login(process.env.TOKEN);
