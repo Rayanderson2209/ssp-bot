@@ -1,6 +1,23 @@
 require("dotenv").config();
 
-const {Client,GatewayIntentBits,Partials,EmbedBuilder,Events,ActionRowBuilder,ButtonBuilder,ButtonStyle,StringSelectMenuBuilder,ModalBuilder,TextInputBuilder,TextInputStyle,PermissionsBitField,ChannelType,SlashCommandBuilder,AuditLogEvent} = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  EmbedBuilder,
+  Events,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  StringSelectMenuBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  PermissionsBitField,
+  ChannelType,
+  SlashCommandBuilder,
+  AuditLogEvent
+} = require("discord.js");
 
 const client = new Client({
   intents: [
@@ -29,131 +46,384 @@ const ausenciasPendentes = new Map();
 const CANAL_FUNCIONAL = "1484826121697628221";
 const CANAL_LOG_FUNCIONAL = "1484826214915899412";
 const CARGO_VUNESP = "1484825992739553321";
+
 const CATEGORIA_TICKETS = "1484826023794184263";
 const CANAL_LOG_TICKETS = "1484826220905627698";
+
 const CANAL_AUSENCIAS_ANALISE = "1509173727475142737";
 const CANAL_AUSENCIAS_LOG = "1509158714526138558";
+
 const CARGO_AUSENCIA_JUSTIFICADA = "1509157689832505435";
 const CARGO_P1HR = "1484825834333143173";
 
-const TICKET_BANNER_URL = "https://cdn.discordapp.com/attachments/1402409732307685446/1508603952944513034/Logo_ssp_litoral.png?ex=6a1775ea&is=6a16246a&hm=9f5f28b3c8d74343efef2539234675316a894643251ae272d876af104df83085&";
-const CARGOS_TICKET = ["1484825744390754407","1484825745313370112",
+const TICKET_BANNER_URL =
+  "https://cdn.discordapp.com/attachments/1402409732307685446/1508603952944513034/Logo_ssp_litoral.png";
 
-"1500286435910226172","1500287874069696572",
+const CARGOS_TICKET = [
+  "1484825744390754407",
+  "1484825745313370112",
+  "1500286435910226172",
+  "1500287874069696572",
+  "1484825780310638643",
+  "1484825781187379290",
+  "1484825784387502180",
+  "1484825799080153168",
+  "1484825785532547073",
+  "1484825800141176873",
+  "1484825788611039233",
+  "1484825803253485669",
+  "1484825787373981837",
+  "1484825802271887360",
+  "1484825789429055489",
+  "1484825803920380085",
+  "1484825790800593037",
+  "1484825805107367947",
+  "1484825792075796551",
+  "1484825806478905484",
+  "1484825793120043038",
+  "1484825807355383929",
+  "1484825743572598784",
+  "1484825747242618881",
+  "1484825753857294527",
+  "1484825834333143173"
+];
 
-"1484825780310638643","1484825781187379290",
+const TIPOS_TICKET = {
+  outros: {
+    nome: "Outros Assuntos",
+    emoji: "ℹ️",
+    descricao: "Solicitar atendimento para outros tipos de assuntos."
+  },
 
-"1484825784387502180","1484825799080153168",
+  atualizacao: {
+    nome: "Atualização Funcional",
+    emoji: "🪪",
+    descricao: "Modificar cargos, editar perfil e alterar dados funcionais."
+  },
 
-"1484825785532547073","1484825800141176873",
+  baixa: {
+    nome: "Baixa de Funcional",
+    emoji: "✍️",
+    descricao: "Solicitar baixa em funcional PM."
+  },
 
-"1484825788611039233","1484825803253485669",
-
-"1484825787373981837","1484825802271887360",
-
-"1484825789429055489","1484825803920380085",
-
-"1484825790800593037","1484825805107367947",
-
-"1484825792075796551","1484825806478905484",
-
-"1484825793120043038","1484825807355383929",
-
-"1484825743572598784","1484825747242618881","1484825753857294527",
-
-"1484825834333143173"];
-
-const TIPOS_TICKET = {outros: {nome: "Outros Assuntos",emoji: "ℹ️",descricao: "Solicitar atendimento para outros tipos de assuntos."},
-
-atualizacao: {nome: "Atualização Funcional",emoji: "🪪",descricao: "Modificar cargos, editar perfil e alterar dados funcionais."},
-
-baixa: {nome: "Baixa de Funcional",emoji: "✍️",descricao: "Solicitar baixa em funcional PM."},
-
-problema: {nome: "Reportar Problema",emoji: "🤖",descricao: "Relatar problemas técnicos da PM, Discord ou cidade."}};
-
-const LOG_ENTRADAS = "1484826127531773974";const LOG_SAIDAS = "1484826130249810104";const LOG_MENSAGENS = "1484826139410173952";const LOG_EXONERACOES = "1484826148847489054";const LOG_CONVITES = "1484826154039771217";const CANAL_LOG_PONTOS_GERAL = "1484826135178248222";
-
-const CANAIS_LOG_PONTO = {QCG: "1508864434007834644",CORREGEDORIA: "1508864278311207012","22BPM": "1484826391340912650",FORCA_TATICA: "1484826438572965950",CAVPM: "1484826472265814046",CAEP: "1484826498962817034",CPCHOQUE: "1508559449793630318",BAEP: "1484826544013574274",ROTA: "1484826598401245235",ANCHIETA: "1484826634505814107",HUMAITA: "1484826674251169873","4BPCHOQUE": "1484826714377818172"};
-const CANALETAS_PONTO = {"1484826105289506836": { batalhaoKey: "QCG", batalhao: "QCG", nome: "CMTG - 001" },"1484826106522505237": { batalhaoKey: "QCG", batalhao: "QCG", nome: "SUBCMTG - 002" },
-
-"1484826141364715663": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60000" },"1484826143713398844": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60001" },"1484826147152859267": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60018" },"1484826150596382863": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60038" },"1484826152475430962": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60040" },"1500031721641476266": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60050" },
-
-"1484826188932448316": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Comando Batalhão | M-22000" },"1484826193306976306": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Sub.Comando Batalhão | M-22001" },"1484826202442043496": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CoordOp | M-22002" },"1484826205696950454": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Supervisão Regional | M-22003" },"1484826208477777940": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CFP | M-22004" },"1484826211254534206": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CGP UNO | M-22223" },"1484826212844175442": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22132 (Duster PM)" },"1484826217864499220": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22106 (Duster PM)" },"1505616011133456625": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22136 (Spin 2023)" },"1484826219181641738": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22146 (Spin 2024)" },"1484826222490812428": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23111 (Spin 2024)" },"1484826225313845299": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-28100 (Duster)" },"1484826228493127730": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23117 (Spin 2024)" },"1484826231156244481": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23140 (Duster)" },"1484826235992281088": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23151/152 (Creta)" },"1484826236869148915": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23153/116 (Creta)" },"1484826240052494467": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23165 (Corolla)" },"1484826243017736274": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23168 (Corolla)" },"1484826246226645002": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM UNO (XRE/LANDER)" },"1484826250659889262": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM DOIS (XRE/LANDER)" },"1484826252438147215": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Base Comunitária M-23270" },"1484826277939773551": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Patrulha Rural" },"1484826281358000259": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM TRES (XRE/LANDER)" },
-"1484826320436199544": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Comando - M-22001" },"1484826323338919957": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Tático Comando - M-22011" },"1484826325679341598": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Tático 90 - M-22090" },"1484826330037227520": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22013 - Tático 13" },"1484826331677200506": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22014 - Tático 14" },"1484826336437735485": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22015 - Tático 15" },"1484826339499315294": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22016 - Tático 16" },"1484826343328977020": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22017 - Tático 17" },"1484826352044609547": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22019 - Tático 19" },"1484826356104564816": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22028 - Tático 28" },"1484826357488947222": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "COMANDO ROCAM" },"1484826360412377138": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "CGP ROCAM (Trail 23)" },"1484826364841558069": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "ROCAM UNO" },"1484826375314735194": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "ROCAM DOIS" },
-
-"1484826382998569081": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "M-3-550/M-3 555/M-3 547" },"1484826386878300242": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 10 (AS350-B3)" },"1484826389843808308": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 19 (AS350-B3)" },"1484826393056378901": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 23 (AS350) GRAU" },"1484826396835713076": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 32 (AW109)" },"1484826400241225830": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 33 (EC135)" },
-"1484826411897458738": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "Comando OESTE | E-M05000" },"1484826415395242054": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CAEP Comando | E-M05001" },"1484826419933614230": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "Coordenador CAEP | E-M05002" },"1484826421367930943": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05004" },"1484826428745711626": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CAEP 90 | E-M05090" },"1484826432524910733": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05006" },"1484826436299657217": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05008" },"1484826440061943879": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05009 / E-M05010" },"1484826443002282096": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05011 / E-M05012" },"1484826446122975374": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05015 / E-M05016" },"1484826447607500841": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05019 • ROCAM" },"1484826450921000960": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05020 / E-M05017" },"1484826454981218424": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "E-M05030/E-M05042" },"1484826468918759524": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CPAM5-048" },"1484826473876426903": { batalhaoKey: "CAEP", batalhao: "CAEP", nome: "CPAM5-061" },
-"1508557841051422842": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COMANDO CPCHOQUE" },"1508558769259548703": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "SUBCOMANDO CPCHOQUE" },"1508559060104908970": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COORDENAÇÃO CPCHOQUE" },"1508559180645269624": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 005" },"1508559202057064589": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 006" },"1508562463103258837": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 007" },
-
-"1484826485301841991": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Comando BAEP" },"1484826488577720332": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Sub Comando BAEP" },"1484826494370058422": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Coordenador BAEP" },"1484826497360334969": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Supervisão BAEP E-07100" },"1484826500753653770": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Supervisão BAEP E-07300" },"1484826509565759488": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "BAEP COMANDO E-07106" },"1484826513047031859": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "BAEP COMANDO E-07301" },"1484826514888589333": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07090 BLAZER/TRAIL 22" },"1484826518235385948": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-103/203 SW4" },"1484826521574047754": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07104/204 TRAIL-12" },"1484826526439575552": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07104/204/480 TRAIL 12" },"1484826538863235072": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-210/212/213 TRAIL 21/22" },"1484826542407155734": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-214/215/218/220 TRAIL 21" },"1484826545754341386": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07315/418/470/471" },"1484826548753137667": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07381 - ROCAM BAEP" },"1484826552167436410": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07385/389 - ROCAM BAEP" },
-"1484826637877907528": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO AGUIAR - 91000" },"1484826650653888512": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO ROTA - 91001" },"1484826654013652992": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COORDENADOR AGUIAR" },"1484826655577997362": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "ROTA UNO - 91100" },"1484826661542166619": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO 10 - 91102" },"1484826665178890350": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "ROTA 90 - 91090" },"1484826666743234570": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91110 - TRAILBLAZER" },"1484826670925090858": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91111 - TRAILBLAZER" },"1484826676104790098": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91112 - TRAILBLAZER" },"1484826678445477898": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91128 - TRAILBLAZER" },"1484826683847475303": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91132 - TRAILBLAZER" },"1484826696929771662": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91142 - TRAILBLAZER" },"1484826700117311580": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "DEJEM ROTA - 3-387" },
-"1508557841051422842": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COMANDO CPCHOQUE" },"1508558769259548703": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "SUBCOMANDO CPCHOQUE" },"1508559060104908970": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COORDENAÇÃO CPCHOQUE" },"1508559180645269624": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 005" },"1508559202057064589": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 006" },"1508562463103258837": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 007" },
-
-"1484826485301841991": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Comando BAEP" },"1484826488577720332": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Sub Comando BAEP" },"1484826494370058422": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Coordenador BAEP" },"1484826497360334969": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Supervisão BAEP E-07100" },"1484826500753653770": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Supervisão BAEP E-07300" },"1484826509565759488": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "BAEP COMANDO E-07106" },"1484826513047031859": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "BAEP COMANDO E-07301" },"1484826514888589333": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07090 BLAZER/TRAIL 22" },"1484826518235385948": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-103/203 SW4" },"1484826521574047754": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07104/204 TRAIL-12" },"1484826526439575552": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07104/204/480 TRAIL 12" },"1484826538863235072": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-210/212/213 TRAIL 21/22" },"1484826542407155734": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-214/215/218/220 TRAIL 21" },"1484826545754341386": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07315/418/470/471" },"1484826548753137667": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07381 - ROCAM BAEP" },"1484826552167436410": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07385/389 - ROCAM BAEP" },
-"1484826637877907528": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO AGUIAR - 91000" },"1484826650653888512": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO ROTA - 91001" },"1484826654013652992": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COORDENADOR AGUIAR" },"1484826655577997362": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "ROTA UNO - 91100" },"1484826661542166619": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO 10 - 91102" },"1484826665178890350": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "ROTA 90 - 91090" },"1484826666743234570": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91110 - TRAILBLAZER" },"1484826670925090858": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91111 - TRAILBLAZER" },"1484826676104790098": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91112 - TRAILBLAZER" },"1484826678445477898": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91128 - TRAILBLAZER" },"1484826683847475303": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91132 - TRAILBLAZER" },"1484826696929771662": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91142 - TRAILBLAZER" },"1484826700117311580": {
-  batalhaoKey: "ROTA",
-  batalhao: "ROTA",
-  nome: "DEJEM ROTA - 3-387"
-}
+  problema: {
+    nome: "Reportar Problema",
+    emoji: "🤖",
+    descricao: "Relatar problemas técnicos da PM, Discord ou cidade."
+  }
 };
 
-const canaisBI = {ssp: "1484826324530102303",qcg: "1484826160222441523",corregedoria: "1484826324530102303",cpchoque: "1500288574162210886","22bpm": "1484826380788174868",forca_tatica: "1484826425331548180",cavpm: "1484826456826843188",caep: "1484826491970912369",baep: "1484826529186844693",rota: "1484826591640031243",anchieta: "1484826628935778344",humaita: "1484826663530401792","4bpchoque": "1484826703304855645"};
+const LOG_ENTRADAS = "1484826127531773974";
+const LOG_SAIDAS = "1484826130249810104";
+const LOG_MENSAGENS = "1484826139410173952";
+const LOG_EXONERACOES = "1484826148847489054";
+const LOG_CONVITES = "1484826154039771217";
 
-const nomesBI = {ssp: "SSP",qcg: "QCG",corregedoria: "Corregedoria",cpchoque: "CPChoque","22bpm": "22º BPM",forca_tatica: "Força Tática",cavpm: "CAVPM",caep: "CAEP",baep: "BAEP",rota: "ROTA",anchieta: "Anchieta",humaita: "Humaitá","4bpchoque": "4º BPChoque"};
+const CANAL_LOG_PONTOS_GERAL = "1484826135178248222";
+const CANAIS_LOG_PONTO = {
+  QCG: "1508864434007834644",
+  CORREGEDORIA: "1508864278311207012",
+  "22BPM": "1484826391340912650",
+  FORCA_TATICA: "1484826438572965950",
+  CAVPM: "1484826472265814046",
+  CAEP: "1484826498962817034",
+  CPCHOQUE: "1508559449793630318",
+  BAEP: "1484826544013574274",
+  ROTA: "1484826598401245235",
+  ANCHIETA: "1484826634505814107",
+  HUMAITA: "1484826674251169873",
+  "4BPCHOQUE": "1484826714377818172"
+};
 
-const hierarquias = {"coronel": { nome: "Coronel PM", insignia: "[✵✵✵]", cargo: "1484825756331937812" },"tenente_coronel": { nome: "Tenente-Coronel PM", insignia: "[✵✵✧]", cargo: "1484825757271330937" },"major": { nome: "Major PM", insignia: "[✵✧✧]", cargo: "1484825757988552846" },"capitao": { nome: "Capitão PM", insignia: "[✧✧✧]", cargo: "1484825760471449641" },"1tenente": { nome: "1º Tenente PM", insignia: "[✧✧]", cargo: "1484825762258227351" },"2tenente": { nome: "2º Tenente PM", insignia: "[✧]", cargo: "1484825762996551801" },"aspirante": { nome: "Aspirante a Oficial PM", insignia: "[✯]", cargo: "1484825765143908422" },"subtenente": { nome: "Subtenente PM", insignia: "[△]", cargo: "1484825768050823198" },"1sgt": { nome: "1º Sargento PM", insignia: "[❯❯ ❯❯❯]", cargo: "1484825769149730857" },"2sgt": { nome: "2º Sargento PM", insignia: "[❯ ❯❯❯]", cargo: "1484825770055569468" },"3sgt": { nome: "3º Sargento PM", insignia: "[❯❯❯]", cargo: "1484825771552935946" },"cabo": { nome: "Cabo PM", insignia: "[❯❯]", cargo: "1484825775621279845" },"sd1": { nome: "Soldado 1ª Classe PM", insignia: "[❯]", cargo: "1484825776745480222" },"sd2": { nome: "Soldado 2ª Classe PM", insignia: "[•❯]", cargo: "1484825777605316640" }};
+const canaisBI = {
+  ssp: "1484826324530102303",
+  qcg: "1484826160222441523",
+  corregedoria: "1484826324530102303",
+  cpchoque: "1500288574162210886",
+  "22bpm": "1484826380788174868",
+  forca_tatica: "1484826425331548180",
+  cavpm: "1484826456826843188",
+  caep: "1484826491970912369",
+  baep: "1484826529186844693",
+  rota: "1484826591640031243",
+  anchieta: "1484826628935778344",
+  humaita: "1484826663530401792",
+  "4bpchoque": "1484826703304855645"
+};
+
+const nomesBI = {
+  ssp: "SSP",
+  qcg: "QCG",
+  corregedoria: "Corregedoria",
+  cpchoque: "CPChoque",
+  "22bpm": "22º BPM",
+  forca_tatica: "Força Tática",
+  cavpm: "CAVPM",
+  caep: "CAEP",
+  baep: "BAEP",
+  rota: "ROTA",
+  anchieta: "Anchieta",
+  humaita: "Humaitá",
+  "4bpchoque": "4º BPChoque"
+};
+
+const hierarquias = {
+  coronel: {
+    nome: "Coronel PM",
+    insignia: "[✵✵✵]",
+    cargo: "1484825756331937812"
+  },
+
+  tenente_coronel: {
+    nome: "Tenente-Coronel PM",
+    insignia: "[✵✵✧]",
+    cargo: "1484825757271330937"
+  },
+
+  major: {
+    nome: "Major PM",
+    insignia: "[✵✧✧]",
+    cargo: "1484825757988552846"
+  },
+
+  capitao: {
+    nome: "Capitão PM",
+    insignia: "[✧✧✧]",
+    cargo: "1484825760471449641"
+  },
+
+  "1tenente": {
+    nome: "1º Tenente PM",
+    insignia: "[✧✧]",
+    cargo: "1484825762258227351"
+  },
+
+  "2tenente": {
+    nome: "2º Tenente PM",
+    insignia: "[✧]",
+    cargo: "1484825762996551801"
+  },
+
+  aspirante: {
+    nome: "Aspirante a Oficial PM",
+    insignia: "[✯]",
+    cargo: "1484825765143908422"
+  },
+
+  subtenente: {
+    nome: "Subtenente PM",
+    insignia: "[△]",
+    cargo: "1484825768050823198"
+  },
+
+  "1sgt": {
+    nome: "1º Sargento PM",
+    insignia: "[❯❯ ❯❯❯]",
+    cargo: "1484825769149730857"
+  },
+
+  "2sgt": {
+    nome: "2º Sargento PM",
+    insignia: "[❯ ❯❯❯]",
+    cargo: "1484825770055569468"
+  },
+
+  "3sgt": {
+    nome: "3º Sargento PM",
+    insignia: "[❯❯❯]",
+    cargo: "1484825771552935946"
+  },
+
+  cabo: {
+    nome: "Cabo PM",
+    insignia: "[❯❯]",
+    cargo: "1484825775621279845"
+  },
+
+  sd1: {
+    nome: "Soldado 1ª Classe PM",
+    insignia: "[❯]",
+    cargo: "1484825776745480222"
+  },
+
+  sd2: {
+    nome: "Soldado 2ª Classe PM",
+    insignia: "[•❯]",
+    cargo: "1484825777605316640"
+  }
+};
 const unidades = {
-  "qcg": { nome: "QCG", cargo: "1484825747242618881" },
-  "corregedoria": { nome: "Corregedoria", cargo: "1484825813269483680" },
-  "cpchoque": { nome: "CPCHOQUE", cargo: "1484825818566885516" },
-  "22bpm": { nome: "22°BPM", cargo: "1484825819191709747" },
-  "forca_tatica": { nome: "Força Tática", cargo: "1484825821473669181" },
-  "cavpm": { nome: "CAVPM", cargo: "1500287874069696572" },
-  "caep": { nome: "CAEP", cargo: "1484825825944797235" },
-  "baep": { nome: "BAEP", cargo: "1484825824895959060" },
-  "rota": { nome: "ROTA", cargo: "1484825827018543115" },
-  "anchieta": { nome: "ANCHIETA", cargo: "1484825827974582333" },
-  "humaita": { nome: "HUMAITÁ", cargo: "1484825828809506866" },
-  "coe": { nome: "COE", cargo: "1484825830747013151" },
-  "gate": { nome: "GATE", cargo: "1484825831552581757" },
-  "policia_civil": { nome: "Polícia Civil", cargo: "1484825988704637000" },
-  "policia_federal": { nome: "Polícia Federal", cargo: "1484825987844804658" },
-  "prf": { nome: "PRF", cargo: "1504240288976212038" },
-  "receita_federal": { nome: "Receita Federal", cargo: "1498108053264928798" }
+  qcg: {
+    nome: "QCG",
+    cargo: "1484825747242618881"
+  },
+
+  corregedoria: {
+    nome: "Corregedoria",
+    cargo: "1484825813269483680"
+  },
+
+  cpchoque: {
+    nome: "CPCHOQUE",
+    cargo: "1484825818566885516"
+  },
+
+  "22bpm": {
+    nome: "22° BPM",
+    cargo: "1484825819191709747"
+  },
+
+  forca_tatica: {
+    nome: "Força Tática",
+    cargo: "1484825821473669181"
+  },
+
+  cavpm: {
+    nome: "CAVPM",
+    cargo: "1500287874069696572"
+  },
+
+  caep: {
+    nome: "CAEP",
+    cargo: "1484825825944797235"
+  },
+
+  baep: {
+    nome: "BAEP",
+    cargo: "1484825824895959060"
+  },
+
+  rota: {
+    nome: "ROTA",
+    cargo: "1484825827018543115"
+  },
+
+  anchieta: {
+    nome: "ANCHIETA",
+    cargo: "1484825827974582333"
+  },
+
+  humaita: {
+    nome: "HUMAITÁ",
+    cargo: "1484825828809506866"
+  },
+
+  coe: {
+    nome: "COE",
+    cargo: "1484825830747013151"
+  },
+
+  gate: {
+    nome: "GATE",
+    cargo: "1484825831552581757"
+  },
+
+  policia_civil: {
+    nome: "Polícia Civil",
+    cargo: "1484825988704637000"
+  },
+
+  policia_federal: {
+    nome: "Polícia Federal",
+    cargo: "1484825987844804658"
+  },
+
+  prf: {
+    nome: "PRF",
+    cargo: "1504240288976212038"
+  },
+
+  receita_federal: {
+    nome: "Receita Federal",
+    cargo: "1498108053264928798"
+  }
 };
 
 const prefixosUnidades = {
-  "policia_civil": "PC",
-  "policia_federal": "PF",
-  "prf": "PRF",
-  "receita_federal": "RF"
+  policia_civil: "PC",
+  policia_federal: "PF",
+  prf: "PRF",
+  receita_federal: "RF"
 };
 
-const cursos = {"sat_a": { nome: "SAT A", cargo: "1484825923760033843" },"sat_b": { nome: "SAT B", cargo: "1484825924624056340" },"pop": { nome: "POP", cargo: "1484825926570217472" },"modulacao": { nome: "Modulação", cargo: "1484825927535038506" },"abordagem": { nome: "ABORDAGEM", cargo: "1484825925446140053" },"tat_1": { nome: "TAT 1", cargo: "1484825928885604474" },"tat_2": { nome: "TAT 2", cargo: "1484825929808347157" },"tat_3": { nome: "TAT 3", cargo: "1484825930940551189" },"copom": { nome: "OPERADOR COPOM", cargo: "1484825922463862795" }};
+const cursos = {
+  sat_a: {
+    nome: "SAT A",
+    cargo: "1484825923760033843"
+  },
 
+  sat_b: {
+    nome: "SAT B",
+    cargo: "1484825924624056340"
+  },
+
+  pop: {
+    nome: "POP",
+    cargo: "1484825926570217472"
+  },
+
+  modulacao: {
+    nome: "Modulação",
+    cargo: "1484825927535038506"
+  },
+
+  abordagem: {
+    nome: "ABORDAGEM",
+    cargo: "1484825925446140053"
+  },
+
+  tat_1: {
+    nome: "TAT 1",
+    cargo: "1484825928885604474"
+  },
+
+  tat_2: {
+    nome: "TAT 2",
+    cargo: "1484825929808347157"
+  },
+
+  tat_3: {
+    nome: "TAT 3",
+    cargo: "1484825930940551189"
+  },
+
+  copom: {
+    nome: "OPERADOR COPOM",
+    cargo: "1484825922463862795"
+  }
+};
 function montarTextoBI(dados) {
   const agora = new Date();
-  const data = agora.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-  const hora = agora.toLocaleTimeString("pt-BR", {timeZone: "America/Sao_Paulo",hour: "2-digit",minute: "2-digit"});
+
+  const data = agora.toLocaleDateString("pt-BR", {
+    timeZone: "America/Sao_Paulo"
+  });
+
+  const hora = agora.toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 
   return `# BOLETIM GERAL - POLÍCIA MILITAR DO ESTADO DE SÃO PAULO
 
 **Unidade:** ${nomesBI[dados.unidade] || "Não informada"}
 
-📁 | **1º PARTE SERVIÇOS DIÁRIOS:**
+📁 | 1º PARTE SERVIÇOS DIÁRIOS:
 BOLETIM GERAL Nº ${dados.numero || "___"}/2026
 
 ${dados.parte1 || "Sem alterações."}
 
-📁 | **2º PARTE INSTRUÇÃO E OPERAÇÕES POLICIAIS MILITARES:**
+📁 | 2º PARTE INSTRUÇÃO E OPERAÇÕES POLICIAIS MILITARES:
 
 ${dados.parte2 || "Sem alterações."}
 
-📁 | **3º PARTE ASSUNTOS GERAIS E ADMINISTRATIVOS:**
+📁 | 3º PARTE ASSUNTOS GERAIS E ADMINISTRATIVOS:
 
 ${dados.parte3 || "Sem alterações."}
 
-📁 | **4º PARTE JUSTIÇA E DISCIPLINA:**
+📁 | 4º PARTE JUSTIÇA E DISCIPLINA:
 
 ${dados.parte4 || "Sem alterações."}
 
@@ -162,16 +432,45 @@ Secretaria da Segurança Pública - Polícia Militar • ${data} ${hora}h`;
 
 function botoesBI() {
   const linha1 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId("bi_parte1").setLabel("1ª Parte").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("bi_parte2").setLabel("2ª Parte").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("bi_parte3").setLabel("3ª Parte").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("bi_parte4").setLabel("4ª Parte").setStyle(ButtonStyle.Primary)
+    new ButtonBuilder()
+      .setCustomId("bi_parte1")
+      .setLabel("1ª Parte")
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId("bi_parte2")
+      .setLabel("2ª Parte")
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId("bi_parte3")
+      .setLabel("3ª Parte")
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId("bi_parte4")
+      .setLabel("4ª Parte")
+      .setStyle(ButtonStyle.Primary)
   );
 
   const linha2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId("preview_bi").setLabel("Pré-visualizar").setEmoji("👁️").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("publicar_bi").setLabel("Publicar").setEmoji("✅").setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId("cancelar_bi").setLabel("Cancelar").setEmoji("❌").setStyle(ButtonStyle.Danger)
+    new ButtonBuilder()
+      .setCustomId("preview_bi")
+      .setLabel("Pré-visualizar")
+      .setEmoji("👁️")
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("publicar_bi")
+      .setLabel("Publicar")
+      .setEmoji("✅")
+      .setStyle(ButtonStyle.Success),
+
+    new ButtonBuilder()
+      .setCustomId("cancelar_bi")
+      .setLabel("Cancelar")
+      .setEmoji("❌")
+      .setStyle(ButtonStyle.Danger)
   );
 
   return [linha1, linha2];
@@ -201,10 +500,23 @@ client.once("ready", async () => {
       .toJSON()
   ]);
 });
+
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
-    if (interaction.isChatInputCommand() && interaction.commandName === "boletim") {
-      boletins.set(interaction.user.id, {unidade: "",numero: "",parte1: "",parte2: "",parte3: "",parte4: ""});
+
+    if (
+      interaction.isChatInputCommand() &&
+      interaction.commandName === "boletim"
+    ) {
+
+      boletins.set(interaction.user.id, {
+        unidade: "",
+        numero: "",
+        parte1: "",
+        parte2: "",
+        parte3: "",
+        parte4: ""
+      });
 
       const menuBI = new StringSelectMenuBuilder()
         .setCustomId("selecionar_bi")
@@ -226,29 +538,48 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ]);
 
       return interaction.reply({
-        content: "📁 Selecione a unidade que vai publicar o Boletim Interno:",
-        components: [new ActionRowBuilder().addComponents(menuBI)],
+        content:
+          "📁 Selecione a unidade que vai publicar o Boletim Interno:",
+        components: [
+          new ActionRowBuilder().addComponents(menuBI)
+        ],
         ephemeral: true
       });
     }
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_bi"
+    ) {
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_bi") {
       const dados = boletins.get(interaction.user.id);
+
       dados.unidade = interaction.values[0];
+
       boletins.set(interaction.user.id, dados);
 
       return interaction.update({
-        content: `📋 Boletim selecionado para: **${nomesBI[dados.unidade]}**\n\nAgora preencha cada parte. Você pode pré-visualizar antes de publicar.`,
+        content:
+          `📋 Boletim selecionado para: **${nomesBI[dados.unidade]}**\n\nAgora preencha cada parte.`,
         components: botoesBI()
       });
     }
 
-    if (interaction.isButton() && ["bi_parte1", "bi_parte2", "bi_parte3", "bi_parte4"].includes(interaction.customId)) {
+    if (
+      interaction.isButton() &&
+      [
+        "bi_parte1",
+        "bi_parte2",
+        "bi_parte3",
+        "bi_parte4"
+      ].includes(interaction.customId)
+    ) {
+
       const modal = new ModalBuilder()
         .setCustomId(`modal_${interaction.customId}`)
         .setTitle("Editar Parte do Boletim");
 
       if (interaction.customId === "bi_parte1") {
+
         const numeroInput = new TextInputBuilder()
           .setCustomId("numero")
           .setLabel("Número do Boletim Geral")
@@ -262,8 +593,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
           .setStyle(TextInputStyle.Paragraph)
           .setRequired(false);
 
-        modal.addComponents(new ActionRowBuilder().addComponents(numeroInput), new ActionRowBuilder().addComponents(textoInput));
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(numeroInput),
+          new ActionRowBuilder().addComponents(textoInput)
+        );
+
       } else {
+
         const labels = {
           bi_parte2: "2ª Parte - Instrução e Operações",
           bi_parte3: "3ª Parte - Assuntos Gerais",
@@ -276,110 +612,178 @@ client.on(Events.InteractionCreate, async (interaction) => {
           .setStyle(TextInputStyle.Paragraph)
           .setRequired(false);
 
-        modal.addComponents(new ActionRowBuilder().addComponents(textoInput));
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(textoInput)
+        );
       }
 
       return interaction.showModal(modal);
     }
-client.on(Events.InteractionCreate, async (interaction) => {
-  try {
-    if (interaction.isChatInputCommand() && interaction.commandName === "boletim") {
-      boletins.set(interaction.user.id, {unidade: "",numero: "",parte1: "",parte2: "",parte3: "",parte4: ""});
+    if (
+      interaction.isModalSubmit() &&
+      [
+        "modal_bi_parte1",
+        "modal_bi_parte2",
+        "modal_bi_parte3",
+        "modal_bi_parte4"
+      ].includes(interaction.customId)
+    ) {
 
-      const menuBI = new StringSelectMenuBuilder()
-        .setCustomId("selecionar_bi")
-        .setPlaceholder("Selecione a unidade do boletim")
-        .addOptions([
-          { label: "SSP", value: "ssp" },
-          { label: "QCG", value: "qcg" },
-          { label: "Corregedoria", value: "corregedoria" },
-          { label: "CPChoque", value: "cpchoque" },
-          { label: "22º BPM", value: "22bpm" },
-          { label: "Força Tática", value: "forca_tatica" },
-          { label: "CAVPM", value: "cavpm" },
-          { label: "CAEP", value: "caep" },
-          { label: "BAEP", value: "baep" },
-          { label: "ROTA", value: "rota" },
-          { label: "Anchieta", value: "anchieta" },
-          { label: "Humaitá", value: "humaita" },
-          { label: "4º BPChoque", value: "4bpchoque" }
-        ]);
+      const dados = boletins.get(interaction.user.id);
+
+      if (!dados) {
+        return interaction.reply({
+          content:
+            "❌ Boletim não encontrado. Use /boletim novamente.",
+          ephemeral: true
+        });
+      }
+
+      const texto =
+        interaction.fields.getTextInputValue("texto") || "";
+
+      if (interaction.customId === "modal_bi_parte1") {
+        dados.numero =
+          interaction.fields.getTextInputValue("numero") || "___";
+
+        dados.parte1 = texto;
+      }
+
+      if (interaction.customId === "modal_bi_parte2") {
+        dados.parte2 = texto;
+      }
+
+      if (interaction.customId === "modal_bi_parte3") {
+        dados.parte3 = texto;
+      }
+
+      if (interaction.customId === "modal_bi_parte4") {
+        dados.parte4 = texto;
+      }
+
+      boletins.set(interaction.user.id, dados);
 
       return interaction.reply({
-        content: "📁 Selecione a unidade que vai publicar o Boletim Interno:",
-        components: [new ActionRowBuilder().addComponents(menuBI)],
+        content:
+          "✅ Parte salva com sucesso.",
         ephemeral: true
       });
     }
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_bi") {
-      const dados = boletins.get(interaction.user.id);
-      dados.unidade = interaction.values[0];
-      boletins.set(interaction.user.id, dados);
+    if (
+      interaction.isButton() &&
+      interaction.customId === "preview_bi"
+    ) {
 
-      return interaction.update({
-        content: `📋 Boletim selecionado para: **${nomesBI[dados.unidade]}**\n\nAgora preencha cada parte. Você pode pré-visualizar antes de publicar.`,
-        components: botoesBI()
+      const dados = boletins.get(interaction.user.id);
+
+      if (!dados) {
+        return interaction.reply({
+          content:
+            "❌ Boletim não encontrado.",
+          ephemeral: true
+        });
+      }
+
+      return interaction.reply({
+        content: montarTextoBI(dados),
+        ephemeral: true
       });
     }
 
-    if (interaction.isButton() && ["bi_parte1", "bi_parte2", "bi_parte3", "bi_parte4"].includes(interaction.customId)) {
-      const modal = new ModalBuilder()
-        .setCustomId(`modal_${interaction.customId}`)
-        .setTitle("Editar Parte do Boletim");
+    if (
+      interaction.isButton() &&
+      interaction.customId === "cancelar_bi"
+    ) {
 
-      if (interaction.customId === "bi_parte1") {
-        const numeroInput = new TextInputBuilder()
-          .setCustomId("numero")
-          .setLabel("Número do Boletim Geral")
-          .setPlaceholder("Ex: 001")
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true);
+      boletins.delete(interaction.user.id);
 
-        const textoInput = new TextInputBuilder()
-          .setCustomId("texto")
-          .setLabel("1ª Parte - Serviços Diários")
-          .setStyle(TextInputStyle.Paragraph)
-          .setRequired(false);
+      return interaction.update({
+        content: "❌ Boletim cancelado.",
+        components: []
+      });
+    }
 
-        modal.addComponents(new ActionRowBuilder().addComponents(numeroInput), new ActionRowBuilder().addComponents(textoInput));
-      } else {
-        const labels = {
-          bi_parte2: "2ª Parte - Instrução e Operações",
-          bi_parte3: "3ª Parte - Assuntos Gerais",
-          bi_parte4: "4ª Parte - Justiça e Disciplina"
-        };
+    if (
+      interaction.isButton() &&
+      interaction.customId === "publicar_bi"
+    ) {
 
-        const textoInput = new TextInputBuilder()
-          .setCustomId("texto")
-          .setLabel(labels[interaction.customId])
-          .setStyle(TextInputStyle.Paragraph)
-          .setRequired(false);
+      const dados = boletins.get(interaction.user.id);
 
-        modal.addComponents(new ActionRowBuilder().addComponents(textoInput));
+      if (!dados) {
+        return interaction.reply({
+          content:
+            "❌ Boletim não encontrado.",
+          ephemeral: true
+        });
       }
 
-      return interaction.showModal(modal);
+      const canalID = canaisBI[dados.unidade];
+
+      const canal =
+        await interaction.guild.channels
+          .fetch(canalID)
+          .catch(() => null);
+
+      if (!canal) {
+        return interaction.reply({
+          content:
+            "❌ Canal do boletim não encontrado.",
+          ephemeral: true
+        });
+      }
+
+      await canal.send({
+        content: montarTextoBI(dados)
+      });
+
+      boletins.delete(interaction.user.id);
+
+      return interaction.update({
+        content:
+          `✅ Boletim publicado em ${nomesBI[dados.unidade]}.`,
+        components: []
+      });
     }
+    if (
+      interaction.isChatInputCommand() &&
+      interaction.commandName === "painel-funcional"
+    ) {
+
+      const embed = new EmbedBuilder()
+        .setTitle("🪪 Solicitação de Funcional")
+        .setDescription(
+          "Clique no botão abaixo para solicitar sua funcional."
+        )
+        .setColor("#87CEEB");
+
       const botao = new ButtonBuilder()
         .setCustomId("abrir_funcional")
         .setLabel("Solicitar Funcional")
         .setEmoji("🪪")
         .setStyle(ButtonStyle.Primary);
 
-      await interaction.reply({
+      return interaction.reply({
         embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(botao)]
+        components: [
+          new ActionRowBuilder().addComponents(botao)
+        ]
       });
     }
-    if (interaction.isButton() && interaction.customId === "abrir_funcional") {
+
+    if (
+      interaction.isButton() &&
+      interaction.customId === "abrir_funcional"
+    ) {
+
       const modal = new ModalBuilder()
         .setCustomId("modal_funcional")
         .setTitle("Solicitação de Funcional");
 
       const nomeInput = new TextInputBuilder()
         .setCustomId("nome")
-        .setLabel("Nome completo do personagem")
+        .setLabel("Nome completo")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
@@ -394,88 +798,137 @@ client.on(Events.InteractionCreate, async (interaction) => {
         new ActionRowBuilder().addComponents(rgInput)
       );
 
-      await interaction.showModal(modal);
+      return interaction.showModal(modal);
     }
-    if (interaction.isModalSubmit() && interaction.customId === "modal_funcional") {
-      const nome = interaction.fields.getTextInputValue("nome");
-      const rg = interaction.fields.getTextInputValue("rg");
 
-      sessoes.set(interaction.user.id, { nome, rg });
+    if (
+      interaction.isModalSubmit() &&
+      interaction.customId === "modal_funcional"
+    ) {
 
-      const menuPatente = new StringSelectMenuBuilder()
-        .setCustomId("selecionar_patente")
-        .setPlaceholder("Selecione sua hierarquia")
-        .addOptions(
-          Object.entries(hierarquias).map(([value, item]) => ({
-            label: item.nome,
-            value
-          }))
-        );
+      const nome =
+        interaction.fields.getTextInputValue("nome");
 
-      await interaction.reply({
-        content: "🎖️ Agora selecione sua **hierarquia**:",
-        components: [new ActionRowBuilder().addComponents(menuPatente)],
+      const rg =
+        interaction.fields.getTextInputValue("rg");
+
+      sessoes.set(interaction.user.id, {
+        nome,
+        rg
+      });
+
+      const menuPatente =
+        new StringSelectMenuBuilder()
+          .setCustomId("selecionar_patente")
+          .setPlaceholder("Selecione sua hierarquia")
+          .addOptions(
+            Object.entries(hierarquias).map(
+              ([value, item]) => ({
+                label: item.nome,
+                value
+              })
+            )
+          );
+
+      return interaction.reply({
+        content:
+          "🎖️ Agora selecione sua hierarquia:",
+        components: [
+          new ActionRowBuilder().addComponents(menuPatente)
+        ],
         ephemeral: true
       });
     }
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_patente"
+    ) {
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_patente") {
       const sessao = sessoes.get(interaction.user.id);
+
       sessao.patente = interaction.values[0];
+
       sessoes.set(interaction.user.id, sessao);
 
-      const menuUnidade = new StringSelectMenuBuilder()
-        .setCustomId("selecionar_unidade")
-        .setPlaceholder("Selecione sua unidade")
-        .addOptions(
-          Object.entries(unidades).map(([value, item]) => ({
-            label: item.nome,
-            value
-          }))
-        );
+      const menuUnidade =
+        new StringSelectMenuBuilder()
+          .setCustomId("selecionar_unidade")
+          .setPlaceholder("Selecione sua unidade")
+          .addOptions(
+            Object.entries(unidades).map(
+              ([value, item]) => ({
+                label: item.nome,
+                value
+              })
+            )
+          );
 
-      await interaction.update({
-        content: "🏢 Agora selecione sua **unidade/batalhão**:",
-        components: [new ActionRowBuilder().addComponents(menuUnidade)]
+      return interaction.update({
+        content:
+          "🏢 Agora selecione sua unidade:",
+        components: [
+          new ActionRowBuilder().addComponents(menuUnidade)
+        ]
       });
     }
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_unidade") {
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_unidade"
+    ) {
+
       const sessao = sessoes.get(interaction.user.id);
+
       sessao.unidade = interaction.values[0];
+
       sessoes.set(interaction.user.id, sessao);
 
-      const menuCursos = new StringSelectMenuBuilder()
-        .setCustomId("selecionar_cursos")
-        .setPlaceholder("Selecione seus cursos")
-        .setMinValues(0)
-        .setMaxValues(Object.keys(cursos).length)
-        .addOptions(
-          Object.entries(cursos).map(([value, item]) => ({
-            label: item.nome,
-            value
-          }))
-        );
+      const menuCursos =
+        new StringSelectMenuBuilder()
+          .setCustomId("selecionar_cursos")
+          .setPlaceholder("Selecione seus cursos")
+          .setMinValues(0)
+          .setMaxValues(Object.keys(cursos).length)
+          .addOptions(
+            Object.entries(cursos).map(
+              ([value, item]) => ({
+                label: item.nome,
+                value
+              })
+            )
+          );
 
-      await interaction.update({
-        content: "📚 Agora selecione seus **cursos**.",
-        components: [new ActionRowBuilder().addComponents(menuCursos)]
+      return interaction.update({
+        content:
+          "📚 Agora selecione seus cursos:",
+        components: [
+          new ActionRowBuilder().addComponents(menuCursos)
+        ]
       });
     }
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_cursos"
+    ) {
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_cursos") {
       const sessao = sessoes.get(interaction.user.id);
+
       sessao.cursos = interaction.values;
 
       const patente = hierarquias[sessao.patente];
       const unidade = unidades[sessao.unidade];
 
-      const novoNick = prefixosUnidades[sessao.unidade]
-        ? `${prefixosUnidades[sessao.unidade]} | ${sessao.nome} | ${sessao.rg}`
-        : `${patente.insignia} ${sessao.nome} | ${sessao.rg}`;
-      const cursosTexto = sessao.cursos.length
-        ? sessao.cursos.map(c => cursos[c].nome).join(", ")
-        : "Nenhum curso informado";
+      const novoNick =
+        prefixosUnidades[sessao.unidade]
+          ? `${prefixosUnidades[sessao.unidade]} | ${sessao.nome} | ${sessao.rg}`
+          : `${patente.insignia} ${sessao.nome} | ${sessao.rg}`;
+
+      const cursosTexto =
+        sessao.cursos.length
+          ? sessao.cursos
+              .map(c => cursos[c].nome)
+              .join(", ")
+          : "Nenhum curso informado";
 
       pendentes.set(interaction.user.id, {
         userId: interaction.user.id,
@@ -491,211 +944,340 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setTitle("📝 Nova Solicitação de Funcional")
         .setColor("#FFD700")
         .addFields(
-          { name: "👤 Solicitante", value: `<@${interaction.user.id}>`, inline: true },
-          { name: "👮 Nome", value: sessao.nome, inline: true },
-          { name: "🆔 RG", value: sessao.rg, inline: true },
-          { name: "🎖️ Hierarquia", value: patente.nome, inline: true },
-          { name: "🏢 Unidade", value: unidade.nome, inline: true },
-          { name: "📚 Cursos", value: cursosTexto },
-          { name: "🏷️ Nickname proposto", value: novoNick }
+          {
+            name: "👤 Solicitante",
+            value: `<@${interaction.user.id}>`,
+            inline: true
+          },
+
+          {
+            name: "👮 Nome",
+            value: sessao.nome,
+            inline: true
+          },
+
+          {
+            name: "🆔 RG",
+            value: sessao.rg,
+            inline: true
+          },
+
+          {
+            name: "🎖️ Hierarquia",
+            value: patente.nome,
+            inline: true
+          },
+
+          {
+            name: "🏢 Unidade",
+            value: unidade.nome,
+            inline: true
+          },
+
+          {
+            name: "📚 Cursos",
+            value: cursosTexto
+          },
+
+          {
+            name: "🏷️ Nickname",
+            value: novoNick
+          }
         )
-        .setFooter({ text: "Aguardando análise do comando" })
         .setTimestamp();
 
       const aprovar = new ButtonBuilder()
-        .setCustomId(`aprovar_funcional_${interaction.user.id}`)
+        .setCustomId(
+          `aprovar_funcional_${interaction.user.id}`
+        )
         .setLabel("Aprovar Funcional")
         .setEmoji("✅")
         .setStyle(ButtonStyle.Success);
 
       const negar = new ButtonBuilder()
-        .setCustomId(`negar_funcional_${interaction.user.id}`)
+        .setCustomId(
+          `negar_funcional_${interaction.user.id}`
+        )
         .setLabel("Negar Funcional")
         .setEmoji("❌")
         .setStyle(ButtonStyle.Danger);
 
-      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_FUNCIONAL).catch(() => null);
+      const canalLog =
+        await interaction.guild.channels
+          .fetch(CANAL_LOG_FUNCIONAL)
+          .catch(() => null);
 
       if (canalLog) {
         await canalLog.send({
           embeds: [logEmbed],
-          components: [new ActionRowBuilder().addComponents(aprovar, negar)]
+          components: [
+            new ActionRowBuilder().addComponents(
+              aprovar,
+              negar
+            )
+          ]
         });
       }
 
-      await interaction.update({
-        content: "✅ Sua solicitação foi enviada para análise do comando.",
-        components: [],
-        embeds: []
-      });
-
       await interaction.user.send({
-        content: "📨 Sua solicitação de funcional foi enviada e está aguardando aprovação do comando."
+        content:
+          "📨 Sua funcional foi enviada para análise."
       }).catch(() => {});
 
       sessoes.delete(interaction.user.id);
-    }
 
-    if (interaction.isButton() && interaction.customId.startsWith("aprovar_funcional_")) {
+      return interaction.update({
+        content:
+          "✅ Solicitação enviada com sucesso.",
+        components: []
+      });
+    }
+    if (
+      interaction.isButton() &&
+      interaction.customId.startsWith(
+        "aprovar_funcional_"
+      )
+    ) {
+
       await interaction.deferUpdate();
 
-      if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
-        return interaction.followUp({
-          content: "❌ Você não tem permissão para aprovar funcionais.",
-          ephemeral: true
-        });
-      }
+      const userId =
+        interaction.customId.replace(
+          "aprovar_funcional_",
+          ""
+        );
 
-      const userId = interaction.customId.replace("aprovar_funcional_", "");
       const dados = pendentes.get(userId);
 
       if (!dados) {
         return interaction.followUp({
-          content: "❌ Solicitação não encontrada ou o bot foi reiniciado.",
+          content:
+            "❌ Solicitação não encontrada.",
           ephemeral: true
         });
       }
 
-      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+      const membro =
+        await interaction.guild.members
+          .fetch(userId)
+          .catch(() => null);
 
       if (!membro) {
         return interaction.followUp({
-          content: "❌ Membro não encontrado no servidor.",
+          content:
+            "❌ Membro não encontrado.",
           ephemeral: true
         });
       }
-      const patente = hierarquias[dados.patenteKey];
-      const unidade = unidades[dados.unidadeKey];
 
-      const todosCargosHierarquia = Object.values(hierarquias).map(x => x.cargo);
-      const todosCargosUnidade = Object.values(unidades).map(x => x.cargo);
+      const patente =
+        hierarquias[dados.patenteKey];
 
-      await membro.roles.remove(todosCargosHierarquia).catch(() => {});
-      await membro.roles.remove(todosCargosUnidade).catch(() => {});
-      await membro.roles.remove(CARGO_VUNESP).catch(() => {});
+      const unidade =
+        unidades[dados.unidadeKey];
 
-      await membro.roles.add(patente.cargo).catch(() => {});
-      await membro.roles.add(unidade.cargo).catch(() => {});
+      const todosCargosHierarquia =
+        Object.values(hierarquias).map(
+          x => x.cargo
+        );
+
+      const todosCargosUnidade =
+        Object.values(unidades).map(
+          x => x.cargo
+        );
+
+      await membro.roles
+        .remove(todosCargosHierarquia)
+        .catch(() => {});
+
+      await membro.roles
+        .remove(todosCargosUnidade)
+        .catch(() => {});
+
+      await membro.roles
+        .remove(CARGO_VUNESP)
+        .catch(() => {});
+
+      await membro.roles
+        .add(patente.cargo)
+        .catch(() => {});
+
+      await membro.roles
+        .add(unidade.cargo)
+        .catch(() => {});
 
       for (const cursoKey of dados.cursosKeys) {
-        await membro.roles.add(cursos[cursoKey].cargo).catch(() => {});
+        await membro.roles
+          .add(cursos[cursoKey].cargo)
+          .catch(() => {});
       }
 
-      await membro.setNickname(dados.novoNick).catch(() => {});
+      await membro
+        .setNickname(dados.novoNick)
+        .catch(() => {});
+
+      await membro.send({
+        content:
+          "✅ Sua funcional foi aprovada."
+      }).catch(() => {});
 
       pendentes.delete(userId);
 
-      const aprovadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-        .setColor("#00FF7F")
-        .setFooter({ text: `Funcional aprovada por ${interaction.user.tag}` });
+      const aprovadoEmbed =
+        EmbedBuilder.from(
+          interaction.message.embeds[0]
+        )
+          .setColor("#00FF7F")
+          .setFooter({
+            text:
+              `Funcional aprovada por ${interaction.user.tag}`
+          });
 
-      await membro.send({
-        content: "✅ Sua funcional foi aprovada pelo comando. Seus cargos e identificação foram atualizados."
-      }).catch(() => {});
-
-      await interaction.message.edit({
+      return interaction.message.edit({
         content: "✅ Funcional aceita.",
         embeds: [aprovadoEmbed],
         components: []
       });
     }
+    if (
+      interaction.isButton() &&
+      interaction.customId.startsWith(
+        "negar_funcional_"
+      )
+    ) {
 
-    if (interaction.isButton() && interaction.customId.startsWith("negar_funcional_")) {
       await interaction.deferUpdate();
 
-      if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
-        return interaction.followUp({
-          content: "❌ Você não tem permissão para negar funcionais.",
-          ephemeral: true
-        });
-      }
+      const userId =
+        interaction.customId.replace(
+          "negar_funcional_",
+          ""
+        );
 
-      const userId = interaction.customId.replace("negar_funcional_", "");
       const dados = pendentes.get(userId);
 
       if (!dados) {
         return interaction.followUp({
-          content: "❌ Solicitação não encontrada ou o bot foi reiniciado.",
+          content:
+            "❌ Solicitação não encontrada.",
           ephemeral: true
         });
       }
 
-      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+      const membro =
+        await interaction.guild.members
+          .fetch(userId)
+          .catch(() => null);
 
       if (membro) {
-        const todosCargosHierarquia = Object.values(hierarquias).map(x => x.cargo);
-        const todosCargosUnidade = Object.values(unidades).map(x => x.cargo);
-        const todosCargosCursos = Object.values(cursos).map(x => x.cargo);
 
-        await membro.roles.remove(todosCargosHierarquia).catch(() => {});
-        await membro.roles.remove(todosCargosUnidade).catch(() => {});
-        await membro.roles.remove(todosCargosCursos).catch(() => {});
-        await membro.roles.add(CARGO_VUNESP).catch(() => {});
+        const todosCargosHierarquia =
+          Object.values(hierarquias).map(
+            x => x.cargo
+          );
+
+        const todosCargosUnidade =
+          Object.values(unidades).map(
+            x => x.cargo
+          );
+
+        const todosCargosCursos =
+          Object.values(cursos).map(
+            x => x.cargo
+          );
+
+        await membro.roles
+          .remove(todosCargosHierarquia)
+          .catch(() => {});
+
+        await membro.roles
+          .remove(todosCargosUnidade)
+          .catch(() => {});
+
+        await membro.roles
+          .remove(todosCargosCursos)
+          .catch(() => {});
+
+        await membro.roles
+          .add(CARGO_VUNESP)
+          .catch(() => {});
+
+        await membro.send({
+          content:
+            "❌ Sua funcional foi negada."
+        }).catch(() => {});
       }
 
       pendentes.delete(userId);
 
-      const negadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-        .setColor("#FF0000")
-        .setFooter({ text: `Funcional negada por ${interaction.user.tag}` });
+      const negadoEmbed =
+        EmbedBuilder.from(
+          interaction.message.embeds[0]
+        )
+          .setColor("#FF0000")
+          .setFooter({
+            text:
+              `Funcional negada por ${interaction.user.tag}`
+          });
 
-      if (membro) {
-        await membro.send({
-          content: "❌ Sua solicitação de funcional foi negada pelo comando. Procure o RH ou abra um ticket para mais informações."
-        }).catch(() => {});
-      }
-
-      await interaction.message.edit({
-        content: "❌ Funcional negada. O membro ficou apenas com o cargo VUNESP.",
+      return interaction.message.edit({
+        content:
+          "❌ Funcional negada.",
         embeds: [negadoEmbed],
         components: []
       });
     }
-    if (interaction.isChatInputCommand() && interaction.commandName === "painel-ticket") {
+    if (
+      interaction.isChatInputCommand() &&
+      interaction.commandName === "painel-ticket"
+    ) {
+
       const embed = new EmbedBuilder()
         .setColor("#ff7a00")
         .setTitle("P1 - RECURSOS HUMANOS")
         .setDescription(
-          "🚨 **P1 - RECURSOS HUMANOS | SSP LITORAL PAULISTA** 🚨\n\n" +
-          "Ao abrir o atendimento, informe corretamente os dados solicitados no formulário.\n\n" +
-          "📌 **Atendimentos disponíveis:**\n" +
-          "• Atualização Funcional\n" +
-          "• Baixa de Funcional\n" +
-          "• Reportar Problema\n" +
-          "• Outros Assuntos\n\n" +
-          "⚠️ **Mantenha postura no canal.**\n" +
-          "Sem flood, sem cobranças desnecessárias e aguarde a equipe de serviço.\n\n" +
-          "**P1 - PMESP**\n" +
-          "Hierarquia e disciplina."
+          "🚨 P1 - RECURSOS HUMANOS | SSP LITORAL PAULISTA 🚨\n\n" +
+          "Selecione abaixo o tipo de atendimento desejado."
         )
-        .setImage(TICKET_BANNER_URL)
-        .setFooter({ text: "SSP Litoral Paulista • Sistema de Atendimento P1/RH" });
+        .setImage(TICKET_BANNER_URL);
 
-      const menu = new StringSelectMenuBuilder()
-        .setCustomId("selecionar_ticket")
-        .setPlaceholder("Escolha uma opção...")
-        .addOptions(
-          Object.entries(TIPOS_TICKET).map(([value, item]) => ({
-            label: item.nome,
-            description: item.descricao,
-            emoji: item.emoji,
-            value
-          }))
-        );
+      const menu =
+        new StringSelectMenuBuilder()
+          .setCustomId("selecionar_ticket")
+          .setPlaceholder("Escolha uma opção...")
+          .addOptions(
+            Object.entries(TIPOS_TICKET).map(
+              ([value, item]) => ({
+                label: item.nome,
+                description: item.descricao,
+                emoji: item.emoji,
+                value
+              })
+            )
+          );
 
       return interaction.reply({
         embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(menu)]
+        components: [
+          new ActionRowBuilder().addComponents(menu)
+        ]
       });
     }
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_ticket") {
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_ticket"
+    ) {
+
       const tipo = interaction.values[0];
+
       const dadosTipo = TIPOS_TICKET[tipo];
 
       const modal = new ModalBuilder()
         .setCustomId(`modal_ticket_${tipo}`)
-        .setTitle(`Atendimento - ${dadosTipo.nome}`);
+        .setTitle(
+          `Atendimento - ${dadosTipo.nome}`
+        );
 
       const nomeInput = new TextInputBuilder()
         .setCustomId("nome")
@@ -709,57 +1291,99 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
-      const batalhaoInput = new TextInputBuilder()
-        .setCustomId("batalhao")
-        .setLabel("Batalhão/Unidade")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+      const batalhaoInput =
+        new TextInputBuilder()
+          .setCustomId("batalhao")
+          .setLabel("Batalhão/Unidade")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
 
-      const relatoInput = new TextInputBuilder()
-        .setCustomId("relato")
-        .setLabel("Relate detalhadamente sua solicitação")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+      const relatoInput =
+        new TextInputBuilder()
+          .setCustomId("relato")
+          .setLabel("Relate sua solicitação")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true);
 
       modal.addComponents(
         new ActionRowBuilder().addComponents(nomeInput),
         new ActionRowBuilder().addComponents(rgInput),
-        new ActionRowBuilder().addComponents(batalhaoInput),
-        new ActionRowBuilder().addComponents(relatoInput)
+        new ActionRowBuilder().addComponents(
+          batalhaoInput
+        ),
+        new ActionRowBuilder().addComponents(
+          relatoInput
+        )
       );
 
       return interaction.showModal(modal);
     }
-    if (interaction.isModalSubmit() && interaction.customId.startsWith("modal_ticket_")) {
-      const tipo = interaction.customId.replace("modal_ticket_", "");
+    if (
+      interaction.isModalSubmit() &&
+      interaction.customId.startsWith(
+        "modal_ticket_"
+      )
+    ) {
+
+      const tipo =
+        interaction.customId.replace(
+          "modal_ticket_",
+          ""
+        );
+
       const dadosTipo = TIPOS_TICKET[tipo];
 
-      const nome = interaction.fields.getTextInputValue("nome");
-      const rg = interaction.fields.getTextInputValue("rg");
-      const batalhao = interaction.fields.getTextInputValue("batalhao");
-      const relato = interaction.fields.getTextInputValue("relato");
+      const nome =
+        interaction.fields.getTextInputValue("nome");
 
-      const nomeCanal = `ticket-${interaction.user.username}`
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, "-")
-        .slice(0, 90);
+      const rg =
+        interaction.fields.getTextInputValue("rg");
+
+      const batalhao =
+        interaction.fields.getTextInputValue(
+          "batalhao"
+        );
+
+      const relato =
+        interaction.fields.getTextInputValue(
+          "relato"
+        );
+
+      const nomeCanal =
+        `ticket-${interaction.user.username}`
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, "-")
+          .slice(0, 90);
+
       const overwrites = [
         {
-          id: interaction.guild.roles.everyone.id,
-          deny: [PermissionsBitField.Flags.ViewChannel]
+          id:
+            interaction.guild.roles.everyone.id,
+
+          deny: [
+            PermissionsBitField.Flags.ViewChannel
+          ]
         },
+
         {
           id: interaction.user.id,
+
           allow: [
             PermissionsBitField.Flags.ViewChannel,
             PermissionsBitField.Flags.SendMessages,
             PermissionsBitField.Flags.ReadMessageHistory
           ]
         },
+
         ...CARGOS_TICKET
-          .filter(cargoId => interaction.guild.roles.cache.has(cargoId))
+          .filter(cargoId =>
+            interaction.guild.roles.cache.has(
+              cargoId
+            )
+          )
           .map(cargoId => ({
             id: cargoId,
+
             allow: [
               PermissionsBitField.Flags.ViewChannel,
               PermissionsBitField.Flags.SendMessages,
@@ -768,207 +1392,295 @@ client.on(Events.InteractionCreate, async (interaction) => {
           }))
       ];
 
-      const canalTicket = await interaction.guild.channels.create({
-        name: nomeCanal,
-        type: ChannelType.GuildText,
-        parent: CATEGORIA_TICKETS,
-        permissionOverwrites: overwrites
-      });
+      const canalTicket =
+        await interaction.guild.channels.create({
+          name: nomeCanal,
+          type: ChannelType.GuildText,
+          parent: CATEGORIA_TICKETS,
+          permissionOverwrites: overwrites
+        });
 
-      const embedTicket = new EmbedBuilder()
-        .setColor("#ff7a00")
-        .setTitle(`${dadosTipo.emoji} Atendimento Aberto - ${dadosTipo.nome}`)
-        .setDescription("📂 Um novo atendimento foi aberto no sistema P1/RH.")
-        .addFields(
-          { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
-          { name: "🪪 Nome", value: nome, inline: true },
-          { name: "🆔 RG", value: rg, inline: true },
-          { name: "🏢 Batalhão", value: batalhao, inline: true },
-          { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
-          { name: "📝 Relato/Solicitação", value: relato.slice(0, 1000) }
-        )
-        .setImage(TICKET_BANNER_URL)
-        .setFooter({ text: "SSP Litoral Paulista • Atendimento P1/RH" })
-        .setTimestamp();
+      const embedTicket =
+        new EmbedBuilder()
+          .setColor("#ff7a00")
+          .setTitle(
+            `${dadosTipo.emoji} Atendimento Aberto`
+          )
+          .addFields(
+            {
+              name: "👤 Solicitante",
+              value: `${interaction.user}`,
+              inline: true
+            },
 
-      const fechar = new ButtonBuilder()
-        .setCustomId("fechar_ticket")
-        .setLabel("Fechar Ticket")
-        .setEmoji("🔒")
-        .setStyle(ButtonStyle.Danger);
+            {
+              name: "🪪 Nome",
+              value: nome,
+              inline: true
+            },
+
+            {
+              name: "🆔 RG",
+              value: rg,
+              inline: true
+            },
+
+            {
+              name: "🏢 Unidade",
+              value: batalhao,
+              inline: true
+            },
+
+            {
+              name: "📝 Relato",
+              value: relato.slice(0, 1000)
+            }
+          )
+          .setTimestamp();
+      const fechar =
+        new ButtonBuilder()
+          .setCustomId("fechar_ticket")
+          .setLabel("Fechar Ticket")
+          .setEmoji("🔒")
+          .setStyle(ButtonStyle.Danger);
 
       await canalTicket.send({
-        content: `${interaction.user} atendimento aberto. Aguarde a equipe responsável.`,
+        content:
+          `${interaction.user} atendimento aberto.`,
         embeds: [embedTicket],
-        components: [new ActionRowBuilder().addComponents(fechar)]
+        components: [
+          new ActionRowBuilder().addComponents(
+            fechar
+          )
+        ]
       });
 
-      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
+      const canalLog =
+        await interaction.guild.channels
+          .fetch(CANAL_LOG_TICKETS)
+          .catch(() => null);
 
       if (canalLog) {
-        const logEmbed = new EmbedBuilder()
-          .setColor("#00FF7F")
-          .setTitle("🎫 Ticket Aberto")
-          .addFields(
-            { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
-            { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
-            { name: "📍 Canal", value: `${canalTicket}`, inline: true }
-          )
-          .setImage(TICKET_BANNER_URL)
-          .setTimestamp();
 
-        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+        const logEmbed =
+          new EmbedBuilder()
+            .setColor("#00FF7F")
+            .setTitle("🎫 Ticket Aberto")
+            .addFields(
+              {
+                name: "👤 Solicitante",
+                value: `${interaction.user}`,
+                inline: true
+              },
+
+              {
+                name: "📌 Categoria",
+                value: dadosTipo.nome,
+                inline: true
+              },
+
+              {
+                name: "📍 Canal",
+                value: `${canalTicket}`,
+                inline: true
+              }
+            )
+            .setTimestamp();
+
+        await canalLog.send({
+          embeds: [logEmbed]
+        }).catch(() => {});
       }
 
-      await interaction.reply({
-        content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
+      return interaction.reply({
+        content:
+          `✅ Ticket criado em ${canalTicket}.`,
         ephemeral: true
       });
-
-      return;
     }
 
-    if (interaction.isButton() && interaction.customId === "fechar_ticket") {
-      const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
-      const mensagens = await interaction.channel.messages.fetch({ limit: 100 }).catch(() => null);
+    if (
+      interaction.isButton() &&
+      interaction.customId === "fechar_ticket"
+    ) {
 
-      let transcript = "TRANSCRIPT DO TICKET\n";
-      transcript += `Canal: ${interaction.channel.name}\n`;
-      transcript += `Fechado por: ${interaction.user.tag}\n`;
-      transcript += `Data: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n`;
-      transcript += "----------------------------------------\n\n";
+      const canalLog =
+        await interaction.guild.channels
+          .fetch(CANAL_LOG_TICKETS)
+          .catch(() => null);
+
+      const mensagens =
+        await interaction.channel.messages
+          .fetch({ limit: 100 })
+          .catch(() => null);
+
+      let transcript =
+        "TRANSCRIPT DO TICKET\n\n";
 
       let donoTicket = null;
 
       if (mensagens) {
-        const mensagensOrdenadas = mensagens.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+
+        const mensagensOrdenadas =
+          mensagens.sort(
+            (a, b) =>
+              a.createdTimestamp -
+              b.createdTimestamp
+          );
 
         for (const msg of mensagensOrdenadas.values()) {
-          const data = new Date(msg.createdTimestamp).toLocaleString("pt-BR", {
-            timeZone: "America/Sao_Paulo"
-          });
 
-          const mention = msg.content?.match(/<@!?(\d+)>/);
-          if (!donoTicket && mention) {
-            donoTicket = await interaction.guild.members.fetch(mention[1]).catch(() => null);
+          const data =
+            new Date(
+              msg.createdTimestamp
+            ).toLocaleString("pt-BR");
+
+          transcript +=
+            `[${data}] ${msg.author.tag}: ${msg.content || "[Sem texto]"}\n`;
+
+          if (!donoTicket) {
+            donoTicket =
+              await interaction.guild.members
+                .fetch(msg.author.id)
+                .catch(() => null);
           }
-
-          if (!donoTicket && !msg.author.bot && msg.author.id !== interaction.user.id) {
-            donoTicket = await interaction.guild.members.fetch(msg.author.id).catch(() => null);
-          }
-
-          transcript += `[${data}] ${msg.author.tag}: ${msg.content || "[Mensagem sem texto]"}\n`;
-
-          if (msg.attachments.size > 0) {
-            msg.attachments.forEach(anexo => {
-              transcript += `📎 Anexo: ${anexo.url}\n`;
-            });
-          }
-
-          transcript += "\n";
         }
       }
+      const buffer =
+        Buffer.from(transcript, "utf-8");
 
-      const buffer = Buffer.from(transcript, "utf-8");
       if (canalLog) {
-        const logEmbed = new EmbedBuilder()
-          .setColor("#FF0000")
-          .setTitle("🔒 Ticket Fechado")
-          .addFields(
-            { name: "📍 Canal", value: interaction.channel.name, inline: true },
-            { name: "👮 Fechado por", value: `${interaction.user}`, inline: true }
-          )
-          .setImage(TICKET_BANNER_URL)
-          .setTimestamp();
+
+        const logEmbed =
+          new EmbedBuilder()
+            .setColor("#FF0000")
+            .setTitle("🔒 Ticket Fechado")
+            .addFields(
+              {
+                name: "📍 Canal",
+                value:
+                  interaction.channel.name,
+                inline: true
+              },
+
+              {
+                name: "👮 Fechado por",
+                value: `${interaction.user}`,
+                inline: true
+              }
+            )
+            .setTimestamp();
 
         await canalLog.send({
           embeds: [logEmbed],
+
           files: [
             {
               attachment: buffer,
-              name: `transcript-${interaction.channel.name}.txt`
+              name:
+                `transcript-${interaction.channel.name}.txt`
             }
           ]
         }).catch(() => {});
       }
 
       if (donoTicket) {
+
         await donoTicket.send({
-          content: "📄 Seu ticket de RH foi encerrado. Segue abaixo o transcript do atendimento.",
+          content:
+            "📄 Seu ticket foi encerrado.",
+
           files: [
             {
               attachment: buffer,
-              name: `transcript-${interaction.channel.name}.txt`
+              name:
+                `transcript-${interaction.channel.name}.txt`
             }
           ]
         }).catch(() => {});
       }
 
       await interaction.reply({
-        content: "🔒 Ticket fechado. Transcript enviado para a log e para o privado do solicitante. Este canal será excluído em 5 segundos.",
-        ephemeral: false
+        content:
+          "🔒 Ticket fechado. Canal será apagado em 5 segundos."
       });
 
       setTimeout(() => {
-        interaction.channel.delete().catch(() => {});
+        interaction.channel
+          .delete()
+          .catch(() => {});
       }, 5000);
     }
+    if (
+      interaction.isChatInputCommand() &&
+      interaction.commandName === "painel-ausencia"
+    ) {
 
-    if (interaction.isChatInputCommand() && interaction.commandName === "painel-ausencia") {
       const embed = new EmbedBuilder()
         .setColor("#ff7a00")
         .setTitle("📋 Justificativa de Ausência")
         .setDescription(
-          "Utilize este painel para justificar sua ausência junto ao setor de **P1/RH**.\n\n" +
+          "Utilize este painel para justificar sua ausência junto ao setor de P1/RH.\n\n" +
           "Clique no botão abaixo e preencha corretamente:\n" +
           "• Nome\n" +
           "• Posto/Graduação\n" +
           "• Batalhão/Unidade\n" +
           "• Motivo da ausência\n\n" +
           "⚠️ O pedido será analisado pelo setor responsável."
-        )
-        .setFooter({ text: "SSP Litoral Paulista • Sistema de Justificativa de Ausência" });
+        );
 
-      const botao = new ButtonBuilder()
-        .setCustomId("abrir_ausencia")
-        .setLabel("Justificar Ausência")
-        .setEmoji("📋")
-        .setStyle(ButtonStyle.Primary);
+      const botao =
+        new ButtonBuilder()
+          .setCustomId("abrir_ausencia")
+          .setLabel("Justificar Ausência")
+          .setEmoji("📋")
+          .setStyle(ButtonStyle.Primary);
 
       return interaction.reply({
         embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(botao)]
+        components: [
+          new ActionRowBuilder().addComponents(botao)
+        ]
       });
     }
 
-    if (interaction.isButton() && interaction.customId === "abrir_ausencia") {
-      const modal = new ModalBuilder()
-        .setCustomId("modal_ausencia")
-        .setTitle("Justificativa de Ausência");
+    if (
+      interaction.isButton() &&
+      interaction.customId === "abrir_ausencia"
+    ) {
 
-      const nomeInput = new TextInputBuilder()
-        .setCustomId("nome")
-        .setLabel("Nome")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+      const modal =
+        new ModalBuilder()
+          .setCustomId("modal_ausencia")
+          .setTitle("Justificativa de Ausência");
 
-      const graduacaoInput = new TextInputBuilder()
-        .setCustomId("graduacao")
-        .setLabel("Posto/Graduação")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+      const nomeInput =
+        new TextInputBuilder()
+          .setCustomId("nome")
+          .setLabel("Nome")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
 
-      const batalhaoInput = new TextInputBuilder()
-        .setCustomId("batalhao")
-        .setLabel("Batalhão/Unidade")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+      const graduacaoInput =
+        new TextInputBuilder()
+          .setCustomId("graduacao")
+          .setLabel("Posto/Graduação")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
 
-      const motivoInput = new TextInputBuilder()
-        .setCustomId("motivo")
-        .setLabel("Motivo")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+      const batalhaoInput =
+        new TextInputBuilder()
+          .setCustomId("batalhao")
+          .setLabel("Batalhão/Unidade")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
+
+      const motivoInput =
+        new TextInputBuilder()
+          .setCustomId("motivo")
+          .setLabel("Motivo")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true);
 
       modal.addComponents(
         new ActionRowBuilder().addComponents(nomeInput),
@@ -979,12 +1691,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       return interaction.showModal(modal);
     }
+    if (
+      interaction.isModalSubmit() &&
+      interaction.customId === "modal_ausencia"
+    ) {
 
-    if (interaction.isModalSubmit() && interaction.customId === "modal_ausencia") {
-      const nome = interaction.fields.getTextInputValue("nome");
-      const graduacao = interaction.fields.getTextInputValue("graduacao");
-      const batalhao = interaction.fields.getTextInputValue("batalhao");
-      const motivo = interaction.fields.getTextInputValue("motivo");
+      const nome =
+        interaction.fields.getTextInputValue("nome");
+
+      const graduacao =
+        interaction.fields.getTextInputValue("graduacao");
+
+      const batalhao =
+        interaction.fields.getTextInputValue("batalhao");
+
+      const motivo =
+        interaction.fields.getTextInputValue("motivo");
+
       ausenciasPendentes.set(interaction.user.id, {
         userId: interaction.user.id,
         nome,
@@ -993,371 +1716,559 @@ client.on(Events.InteractionCreate, async (interaction) => {
         motivo
       });
 
-      const embed = new EmbedBuilder()
-        .setColor("#FFD700")
-        .setTitle("📋 Nova Justificativa de Ausência")
-        .addFields(
-          { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
-          { name: "🪪 Nome", value: nome, inline: true },
-          { name: "🎖️ Posto/Graduação", value: graduacao, inline: true },
-          { name: "🏢 Batalhão/Unidade", value: batalhao, inline: true },
-          { name: "📝 Motivo", value: motivo.slice(0, 1000) }
-        )
-        .setFooter({ text: "Aguardando análise do P1/RH" })
-        .setTimestamp();
+      const embed =
+        new EmbedBuilder()
+          .setColor("#FFD700")
+          .setTitle("📋 Nova Justificativa de Ausência")
+          .addFields(
+            {
+              name: "👤 Solicitante",
+              value: `${interaction.user}`,
+              inline: true
+            },
 
-      const aprovar = new ButtonBuilder()
-        .setCustomId(`aprovar_ausencia_${interaction.user.id}`)
-        .setLabel("Aprovar Ausência")
-        .setEmoji("✅")
-        .setStyle(ButtonStyle.Success);
+            {
+              name: "🪪 Nome",
+              value: nome,
+              inline: true
+            },
 
-      const negar = new ButtonBuilder()
-        .setCustomId(`negar_ausencia_${interaction.user.id}`)
-        .setLabel("Negar Ausência")
-        .setEmoji("❌")
-        .setStyle(ButtonStyle.Danger);
+            {
+              name: "🎖️ Posto/Graduação",
+              value: graduacao,
+              inline: true
+            },
 
-      const canalAnalise = await interaction.guild.channels.fetch(CANAL_AUSENCIAS_ANALISE).catch(() => null);
+            {
+              name: "🏢 Batalhão/Unidade",
+              value: batalhao,
+              inline: true
+            },
+
+            {
+              name: "📝 Motivo",
+              value: motivo.slice(0, 1000)
+            }
+          )
+          .setTimestamp();
+
+      const aprovar =
+        new ButtonBuilder()
+          .setCustomId(
+            `aprovar_ausencia_${interaction.user.id}`
+          )
+          .setLabel("Aprovar Ausência")
+          .setEmoji("✅")
+          .setStyle(ButtonStyle.Success);
+
+      const negar =
+        new ButtonBuilder()
+          .setCustomId(
+            `negar_ausencia_${interaction.user.id}`
+          )
+          .setLabel("Negar Ausência")
+          .setEmoji("❌")
+          .setStyle(ButtonStyle.Danger);
+
+      const canalAnalise =
+        await interaction.guild.channels
+          .fetch(CANAL_AUSENCIAS_ANALISE)
+          .catch(() => null);
 
       if (canalAnalise) {
+
         await canalAnalise.send({
-          content: `<@&${CARGO_P1HR}> nova justificativa de ausência para análise.`,
+          content:
+            `<@&${CARGO_P1HR}> nova justificativa de ausência para análise.`,
           embeds: [embed],
-          components: [new ActionRowBuilder().addComponents(aprovar, negar)]
+          components: [
+            new ActionRowBuilder().addComponents(
+              aprovar,
+              negar
+            )
+          ]
         });
       }
 
       return interaction.reply({
-        content: "✅ Sua justificativa de ausência foi enviada para análise do P1/RH.",
+        content:
+          "✅ Sua justificativa de ausência foi enviada para análise do P1/RH.",
         ephemeral: true
       });
     }
+    if (
+      interaction.isButton() &&
+      interaction.customId.startsWith("aprovar_ausencia_")
+    ) {
 
-    if (interaction.isButton() && interaction.customId.startsWith("aprovar_ausencia_")) {
       await interaction.deferUpdate();
 
-      if (!interaction.member.roles.cache.has(CARGO_P1HR) && !interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+      if (
+        !interaction.member.roles.cache.has(CARGO_P1HR) &&
+        !interaction.member.permissions.has(
+          PermissionsBitField.Flags.ManageRoles
+        )
+      ) {
         return interaction.followUp({
-          content: "❌ Apenas P1-HR pode aprovar justificativas de ausência.",
+          content:
+            "❌ Apenas P1-HR pode aprovar justificativas de ausência.",
           ephemeral: true
         });
       }
 
-      const userId = interaction.customId.replace("aprovar_ausencia_", "");
-      const dados = ausenciasPendentes.get(userId);
+      const userId =
+        interaction.customId.replace(
+          "aprovar_ausencia_",
+          ""
+        );
+
+      const dados =
+        ausenciasPendentes.get(userId);
 
       if (!dados) {
         return interaction.followUp({
-          content: "❌ Solicitação de ausência não encontrada ou o bot foi reiniciado.",
+          content:
+            "❌ Solicitação de ausência não encontrada ou o bot foi reiniciado.",
           ephemeral: true
         });
       }
 
-      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+      const membro =
+        await interaction.guild.members
+          .fetch(userId)
+          .catch(() => null);
 
       if (!membro) {
         return interaction.followUp({
-          content: "❌ Membro não encontrado no servidor.",
+          content:
+            "❌ Membro não encontrado no servidor.",
           ephemeral: true
         });
       }
 
-      await membro.roles.add(CARGO_AUSENCIA_JUSTIFICADA).catch(() => {});
+      await membro.roles
+        .add(CARGO_AUSENCIA_JUSTIFICADA)
+        .catch(() => {});
 
       await membro.send({
-        content: "✅ Sua justificativa de ausência foi aprovada pelo P1/RH. A tag **AUSEN.JUST.** foi aplicada."
+        content:
+          "✅ Sua justificativa de ausência foi aprovada pelo P1/RH. A tag AUSEN.JUST. foi aplicada."
       }).catch(() => {});
 
-      const canalLog = await interaction.guild.channels.fetch(CANAL_AUSENCIAS_LOG).catch(() => null);
+      const canalLog =
+        await interaction.guild.channels
+          .fetch(CANAL_AUSENCIAS_LOG)
+          .catch(() => null);
 
       if (canalLog) {
-        const logEmbed = new EmbedBuilder()
-          .setColor("#00FF7F")
-          .setTitle("✅ Ausência Justificada Aprovada")
-          .addFields(
-            { name: "👤 Militar", value: `<@${userId}>`, inline: true },
-            { name: "🪪 Nome", value: dados.nome, inline: true },
-            { name: "🎖️ Posto/Graduação", value: dados.graduacao, inline: true },
-            { name: "🏢 Batalhão/Unidade", value: dados.batalhao, inline: true },
-            { name: "👮 Aprovado por", value: `${interaction.user}`, inline: true },
-            { name: "📝 Motivo", value: dados.motivo.slice(0, 1000) }
-          )
-          .setTimestamp();
 
-        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+        const logEmbed =
+          new EmbedBuilder()
+            .setColor("#00FF7F")
+            .setTitle("✅ Ausência Justificada Aprovada")
+            .addFields(
+              {
+                name: "👤 Militar",
+                value: `<@${userId}>`,
+                inline: true
+              },
+
+              {
+                name: "🪪 Nome",
+                value: dados.nome,
+                inline: true
+              },
+
+              {
+                name: "🎖️ Posto/Graduação",
+                value: dados.graduacao,
+                inline: true
+              },
+
+              {
+                name: "🏢 Batalhão/Unidade",
+                value: dados.batalhao,
+                inline: true
+              },
+
+              {
+                name: "👮 Aprovado por",
+                value: `${interaction.user}`,
+                inline: true
+              },
+
+              {
+                name: "📝 Motivo",
+                value: dados.motivo.slice(0, 1000)
+              }
+            )
+            .setTimestamp();
+
+        await canalLog.send({
+          embeds: [logEmbed]
+        }).catch(() => {});
       }
-
       ausenciasPendentes.delete(userId);
-      const aprovadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-        .setColor("#00FF7F")
-        .setFooter({ text: `Ausência aprovada por ${interaction.user.tag}` });
+
+      const aprovadoEmbed =
+        EmbedBuilder.from(
+          interaction.message.embeds[0]
+        )
+          .setColor("#00FF7F")
+          .setFooter({
+            text:
+              `Ausência aprovada por ${interaction.user.tag}`
+          });
 
       return interaction.message.edit({
-        content: "✅ Justificativa de ausência aprovada.",
+        content:
+          "✅ Justificativa de ausência aprovada.",
         embeds: [aprovadoEmbed],
         components: []
       });
     }
 
-    if (interaction.isButton() && interaction.customId.startsWith("negar_ausencia_")) {
+    if (
+      interaction.isButton() &&
+      interaction.customId.startsWith("negar_ausencia_")
+    ) {
+
       await interaction.deferUpdate();
 
-      if (!interaction.member.roles.cache.has(CARGO_P1HR) && !interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+      if (
+        !interaction.member.roles.cache.has(CARGO_P1HR) &&
+        !interaction.member.permissions.has(
+          PermissionsBitField.Flags.ManageRoles
+        )
+      ) {
         return interaction.followUp({
-          content: "❌ Apenas P1-HR pode negar justificativas de ausência.",
+          content:
+            "❌ Apenas P1-HR pode negar justificativas de ausência.",
           ephemeral: true
         });
       }
 
-      const userId = interaction.customId.replace("negar_ausencia_", "");
-      const dados = ausenciasPendentes.get(userId);
+      const userId =
+        interaction.customId.replace(
+          "negar_ausencia_",
+          ""
+        );
+
+      const dados =
+        ausenciasPendentes.get(userId);
 
       if (!dados) {
         return interaction.followUp({
-          content: "❌ Solicitação de ausência não encontrada ou o bot foi reiniciado.",
+          content:
+            "❌ Solicitação de ausência não encontrada ou o bot foi reiniciado.",
           ephemeral: true
         });
       }
 
-      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+      const membro =
+        await interaction.guild.members
+          .fetch(userId)
+          .catch(() => null);
 
       if (membro) {
         await membro.send({
-          content: "❌ Sua justificativa de ausência foi negada pelo P1/RH. Abra um ticket no RH para tentar solicitar outra ausência."
+          content:
+            "❌ Sua justificativa de ausência foi negada pelo P1/RH. Abra um ticket no RH para tentar solicitar outra ausência."
         }).catch(() => {});
       }
 
       ausenciasPendentes.delete(userId);
 
-      const negadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-        .setColor("#FF0000")
-        .setFooter({ text: `Ausência negada por ${interaction.user.tag}` });
+      const negadoEmbed =
+        EmbedBuilder.from(
+          interaction.message.embeds[0]
+        )
+          .setColor("#FF0000")
+          .setFooter({
+            text:
+              `Ausência negada por ${interaction.user.tag}`
+          });
 
       return interaction.message.edit({
-        content: "❌ Justificativa de ausência negada.",
+        content:
+          "❌ Justificativa de ausência negada.",
         embeds: [negadoEmbed],
         components: []
       });
     }
 
   } catch (err) {
+
     console.error(err);
 
-    if (!interaction.replied && !interaction.deferred) {
+    if (
+      !interaction.replied &&
+      !interaction.deferred
+    ) {
       await interaction.reply({
-        content: "❌ Ocorreu um erro ao processar sua solicitação.",
+        content:
+          "❌ Ocorreu um erro ao processar sua solicitação.",
         ephemeral: true
       }).catch(() => {});
     }
   }
 });
-
 client.on(Events.GuildMemberAdd, async (member) => {
-  const canal = client.channels.cache.get(LOG_ENTRADAS);
+
+  const canal =
+    client.channels.cache.get(LOG_ENTRADAS);
+
   if (!canal) return;
 
-  const embed = new EmbedBuilder()
-    .setColor("#00FF7F")
-    .setDescription(`📥 | ${member} entrou no servidor.`)
-    .setTimestamp();
+  const embed =
+    new EmbedBuilder()
+      .setColor("#00FF7F")
+      .setDescription(
+        `📥 | ${member} entrou no servidor.`
+      )
+      .setTimestamp();
 
-  canal.send({ embeds: [embed] }).catch(() => {});
+  canal.send({
+    embeds: [embed]
+  }).catch(() => {});
 });
 
 client.on(Events.GuildMemberRemove, async (member) => {
-  const canalSaidas = client.channels.cache.get(LOG_SAIDAS);
-  const canalExoneracoes = client.channels.cache.get(LOG_EXONERACOES);
+
+  const canalSaidas =
+    client.channels.cache.get(LOG_SAIDAS);
+
+  const canalExoneracoes =
+    client.channels.cache.get(LOG_EXONERACOES);
 
   if (canalSaidas) {
-    const embedSaida = new EmbedBuilder()
-      .setColor("#FFA500")
-      .setDescription(`📤 | ${member.user.tag} saiu do servidor.`)
-      .setTimestamp();
 
-    canalSaidas.send({ embeds: [embedSaida] }).catch(() => {});
+    const embedSaida =
+      new EmbedBuilder()
+        .setColor("#FFA500")
+        .setDescription(
+          `📤 | ${member.user.tag} saiu do servidor.`
+        )
+        .setTimestamp();
+
+    canalSaidas.send({
+      embeds: [embedSaida]
+    }).catch(() => {});
   }
 
-  const audit = await member.guild.fetchAuditLogs({
-    limit: 1,
-    type: AuditLogEvent.MemberKick
-  }).catch(() => null);
+  const audit =
+    await member.guild.fetchAuditLogs({
+      limit: 1,
+      type: AuditLogEvent.MemberKick
+    }).catch(() => null);
 
-  const kickLog = audit?.entries.first();
+  const kickLog =
+    audit?.entries.first();
 
   if (
     kickLog &&
     kickLog.target?.id === member.id &&
     Date.now() - kickLog.createdTimestamp < 7000
   ) {
-    if (canalExoneracoes) {
-      const embedKick = new EmbedBuilder()
-        .setColor("#FF0000")
-        .setDescription(`🚫 | ${member.user.tag} foi exonerado por ${kickLog.executor}.`)
-        .setTimestamp();
 
-      canalExoneracoes.send({ embeds: [embedKick] }).catch(() => {});
+    if (canalExoneracoes) {
+
+      const embedKick =
+        new EmbedBuilder()
+          .setColor("#FF0000")
+          .setDescription(
+            `🚫 | ${member.user.tag} foi exonerado por ${kickLog.executor}.`
+          )
+          .setTimestamp();
+
+      canalExoneracoes.send({
+        embeds: [embedKick]
+      }).catch(() => {});
     }
   }
 });
 client.on(Events.GuildBanAdd, async (ban) => {
-  const canal = client.channels.cache.get(LOG_EXONERACOES);
+
+  const canal =
+    client.channels.cache.get(LOG_EXONERACOES);
+
   if (!canal) return;
 
-  const audit = await ban.guild.fetchAuditLogs({
-    limit: 1,
-    type: AuditLogEvent.MemberBanAdd
-  }).catch(() => null);
+  const audit =
+    await ban.guild.fetchAuditLogs({
+      limit: 1,
+      type: AuditLogEvent.MemberBanAdd
+    }).catch(() => null);
 
-  const banLog = audit?.entries.first();
-  const executor = banLog?.executor ? `${banLog.executor}` : "Não identificado";
+  const banLog =
+    audit?.entries.first();
 
-  const embed = new EmbedBuilder()
-    .setColor("#FF0000")
-    .setDescription(`⛔ | ${ban.user.tag} foi banido/exonerado por ${executor}.`)
-    .setTimestamp();
+  const executor =
+    banLog?.executor
+      ? `${banLog.executor}`
+      : "Não identificado";
 
-  canal.send({ embeds: [embed] }).catch(() => {});
+  const embed =
+    new EmbedBuilder()
+      .setColor("#FF0000")
+      .setDescription(
+        `⛔ | ${ban.user.tag} foi banido/exonerado por ${executor}.`
+      )
+      .setTimestamp();
+
+  canal.send({
+    embeds: [embed]
+  }).catch(() => {});
 });
 
 client.on(Events.MessageDelete, async (message) => {
+
   if (!message.guild) return;
   if (!message.author) return;
   if (message.author.bot) return;
 
-  const canal = client.channels.cache.get(LOG_MENSAGENS);
+  const canal =
+    client.channels.cache.get(LOG_MENSAGENS);
+
   if (!canal) return;
 
-  const conteudo = message.content
-    ? message.content.slice(0, 1000)
-    : "Mensagem sem texto ou não armazenada em cache.";
+  const conteudo =
+    message.content
+      ? message.content.slice(0, 1000)
+      : "Mensagem sem texto ou não armazenada em cache.";
 
-  const embed = new EmbedBuilder()
-    .setColor("#5865F2")
-    .setDescription(`🎉 | O chat teve 1 mensagem deletada por ${message.author}!`)
-    .addFields(
-      { name: "📍 Canal", value: `${message.channel}`, inline: true },
-      { name: "💬 Conteúdo", value: conteudo }
-    )
-    .setTimestamp();
+  const embed =
+    new EmbedBuilder()
+      .setColor("#5865F2")
+      .setDescription(
+        `🎉 | O chat teve 1 mensagem deletada por ${message.author}!`
+      )
+      .addFields(
+        {
+          name: "📍 Canal",
+          value: `${message.channel}`,
+          inline: true
+        },
 
-  canal.send({ embeds: [embed] }).catch(() => {});
+        {
+          name: "💬 Conteúdo",
+          value: conteudo
+        }
+      )
+      .setTimestamp();
+
+  canal.send({
+    embeds: [embed]
+  }).catch(() => {});
 });
-
 client.on(Events.InviteCreate, async (invite) => {
-  const canal = client.channels.cache.get(LOG_CONVITES);
+
+  const canal =
+    client.channels.cache.get(LOG_CONVITES);
+
   if (!canal) return;
 
-  const criador = invite.inviter ? `${invite.inviter}` : "Não identificado";
+  const criador =
+    invite.inviter
+      ? `${invite.inviter}`
+      : "Não identificado";
 
-  const embed = new EmbedBuilder()
-    .setColor("#57F287")
-    .setDescription(`🔗 | ${criador} criou um novo convite em ${invite.channel}.`)
-    .addFields({
-      name: "📎 Convite",
-      value: `https://discord.gg/${invite.code}`
-    })
-    .setTimestamp();
+  const embed =
+    new EmbedBuilder()
+      .setColor("#57F287")
+      .setDescription(
+        `🔗 | ${criador} criou um novo convite em ${invite.channel}.`
+      )
+      .addFields({
+        name: "📎 Convite",
+        value: `https://discord.gg/${invite.code}`
+      })
+      .setTimestamp();
 
-  canal.send({ embeds: [embed] }).catch(() => {});
+  canal.send({
+    embeds: [embed]
+  }).catch(() => {});
 });
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   try {
+
     const canalAtual = newState.channel;
-    const canalAntigo = oldState.channel;
-
-    if (canalAntigo && CANALETAS_PONTO[canalAntigo.id]) {
-      const membrosAntigo = canalAntigo.members.filter(m => !m.user.bot);
-
-      if (membrosAntigo.size < 2) {
-        pontosRegistrados.delete(canalAntigo.id);
-      }
-    }
 
     if (!canalAtual) return;
 
-    const dadosCanaleta = CANALETAS_PONTO[canalAtual.id];
-    if (!dadosCanaleta) return;
+    const membros =
+      canalAtual.members.filter(m => !m.user.bot);
 
-    const membros = canalAtual.members.filter(m => !m.user.bot);
-    const quantidade = membros.size;
+    if (membros.size < 2) return;
+    if (membros.size > 4) return;
 
-    if (quantidade < 2) {
-      pontosRegistrados.delete(canalAtual.id);
+    if (
+      pontosRegistrados.has(canalAtual.id)
+    ) {
       return;
     }
 
-    if (quantidade > 4) return;
-
-    if (pontosRegistrados.has(canalAtual.id)) return;
-
     const agora = new Date();
 
-    const data = agora.toLocaleDateString("pt-BR", {
-      timeZone: "America/Sao_Paulo"
-    });
+    const data =
+      agora.toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo"
+      });
 
-    const hora = agora.toLocaleTimeString("pt-BR", {
-      timeZone: "America/Sao_Paulo",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+    const hora =
+      agora.toLocaleTimeString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
 
-    const integrantes = membros
-      .map(m => `• ${m.displayName}`)
-      .join("\n");
+    const integrantes =
+      membros
+        .map(m => `• ${m.displayName}`)
+        .join("\n");
 
-    const embed = new EmbedBuilder()
-      .setColor("#2B2D31")
-      .setTitle("📋 Ponto Registrado")
-      .setDescription("🚔 Uma guarnição iniciou patrulhamento em canaleta operacional.")
-      .addFields(
-        {
-          name: "👮 Integrantes da Viatura",
-          value: integrantes || "Não identificado"
-        },
-        {
-          name: "📅 Data",
-          value: data,
-          inline: true
-        },
-        {
-          name: "🕒 Horário de Entrada",
-          value: hora,
-          inline: true
-        },
-        {
-          name: "🏢 Batalhão",
-          value: dadosCanaleta.batalhao,
-          inline: true
-        },
-        {
-          name: "🚓 Canaleta / Prefixo",
-          value: dadosCanaleta.nome
-        }
-      )
-      .setFooter({
-        text: "SSP Litoral Paulista • Sistema Automático de Ponto"
-      })
-      .setTimestamp();
+    const embed =
+      new EmbedBuilder()
+        .setColor("#2B2D31")
+        .setTitle("📋 Ponto Registrado")
+        .setDescription(
+          "🚔 Uma guarnição iniciou patrulhamento em canaleta operacional."
+        )
+        .addFields(
+          {
+            name: "👮 Integrantes",
+            value: integrantes
+          },
 
-    const canalLogBatalhaoId = CANAIS_LOG_PONTO[dadosCanaleta.batalhaoKey];
+          {
+            name: "📅 Data",
+            value: data,
+            inline: true
+          },
 
-    const canalLogBatalhao = canalLogBatalhaoId
-      ? await newState.guild.channels.fetch(canalLogBatalhaoId).catch(() => null)
-      : null;
+          {
+            name: "🕒 Horário",
+            value: hora,
+            inline: true
+          },
 
-    const canalLogGeral = await newState.guild.channels
-      .fetch(CANAL_LOG_PONTOS_GERAL)
-      .catch(() => null);
+          {
+            name: "🚓 Canaleta",
+            value: canalAtual.name
+          }
+        )
+        .setTimestamp();
 
-    if (canalLogBatalhao) {
-      await canalLogBatalhao.send({ embeds: [embed] }).catch(() => {});
-    }
+    const canalLogGeral =
+      await newState.guild.channels
+        .fetch(CANAL_LOG_PONTOS_GERAL)
+        .catch(() => null);
 
-    if (canalLogGeral && canalLogGeral.id !== canalLogBatalhao?.id) {
-      await canalLogGeral.send({ embeds: [embed] }).catch(() => {});
+    if (canalLogGeral) {
+      await canalLogGeral.send({
+        embeds: [embed]
+      }).catch(() => {});
     }
 
     pontosRegistrados.set(canalAtual.id, {
@@ -1365,8 +2276,12 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
       registradoEm: Date.now(),
       membros: membros.map(m => m.id)
     });
+
   } catch (err) {
-    console.error("Erro no sistema de ponto automático:", err);
+    console.error(
+      "Erro no sistema de ponto automático:",
+      err
+    );
   }
 });
 
