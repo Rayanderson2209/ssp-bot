@@ -726,14 +726,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
             PermissionsBitField.Flags.ReadMessageHistory
           ]
         },
-        ...CARGOS_TICKET.map(cargoId => ({
-          id: cargoId,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages,
-            PermissionsBitField.Flags.ReadMessageHistory
-          ]
-        }))
+      ...CARGOS_TICKET
+  .filter(cargoId => interaction.guild.roles.cache.has(cargoId))
+  .map(cargoId => ({
+    id: cargoId,
+    allow: [
+      PermissionsBitField.Flags.ViewChannel,
+      PermissionsBitField.Flags.SendMessages,
+      PermissionsBitField.Flags.ReadMessageHistory
+    ]
+  }))
       ];
 
       const canalTicket = await interaction.guild.channels.create({
