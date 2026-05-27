@@ -794,7 +794,6 @@ await interaction.deferUpdate();
 
         await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
       }
-
      await interaction.reply({
   content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
   ephemeral: true
