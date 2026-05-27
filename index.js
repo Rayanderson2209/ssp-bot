@@ -795,11 +795,12 @@ await interaction.deferUpdate();
         await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
       }
 
-      return interaction.reply({
-        content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
-        ephemeral: true
-      });
-    }
+     await interaction.reply({
+  content: `✅ Seu atendimento foi aberto em ${canalTicket}.`,
+  ephemeral: true
+});
+
+return;
 
     if (interaction.isButton() && interaction.customId === "fechar_ticket") {
       const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
