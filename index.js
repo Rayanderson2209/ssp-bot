@@ -518,7 +518,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       sessoes.delete(interaction.user.id);
     }
-    if (interaction.isButton() && interaction.customId.startsWith("aprovar_funcional_")) {
+   if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+await interaction.deferUpdate();
       if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
         return interaction.reply({
           content: "❌ Você não tem permissão para aprovar funcionais.",
@@ -570,22 +571,26 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setColor("#00FF7F")
         .setFooter({ text: `Funcional aprovada por ${interaction.user.tag}` });
 
-      await interaction.update({
-        content: "✅ Funcional aprovada e cargos aplicados.",
-        embeds: [aprovadoEmbed],
-        components: []
-      });
+     await interaction.message.edit({
+  content: "✅ Funcional aceita.",
+  embeds: [aprovadoEmbed],
+  components: []
+});
     }
 
-    if (interaction.isButton() && interaction.customId.startsWith("negar_funcional_")) {
-      if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
-        return interaction.reply({
-          content: "❌ Você não tem permissão para negar funcionais.",
-          ephemeral: true
-        });
-      }
+    if (interaction.isButton() && interaction.customId.startsWith("aprovar_funcional_")) {
 
-      const userId = interaction.customId.replace("negar_funcional_", "");
+    await interaction.deferUpdate();
+
+    if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+        return interaction.followUp({
+            content: "❌ Você não tem permissão para aprovar funcionais.",
+            ephemeral: true
+        });
+    }
+
+    const userId = interaction.customId.replace("aprovar_funcional_", "");
+
       const dados = pendentes.get(userId);
 
       if (!dados) {
