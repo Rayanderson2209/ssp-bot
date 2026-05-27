@@ -3,6 +3,7 @@ require("dotenv").config();
 const {
   Client,
   GatewayIntentBits,
+  Partials,
   EmbedBuilder,
   Events,
   ActionRowBuilder,
