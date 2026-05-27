@@ -24,12 +24,17 @@ const sessoes = new Map();
 const pendentes = new Map();
 const boletins = new Map();
 const pontosRegistrados = new Map();
+const ausenciasPendentes = new Map();
 
 const CANAL_FUNCIONAL = "1484826121697628221";
 const CANAL_LOG_FUNCIONAL = "1484826214915899412";
 const CARGO_VUNESP = "1484825992739553321";
 const CATEGORIA_TICKETS = "1484826023794184263";
 const CANAL_LOG_TICKETS = "1484826220905627698";
+const CANAL_AUSENCIAS_ANALISE = "1484826229759672380";
+const CANAL_AUSENCIAS_LOG = "1509158714526138558";
+const CARGO_AUSENCIA_JUSTIFICADA = "1509157689832505435";
+const CARGO_P1HR = "1484825834333143173";
 
 const TICKET_BANNER_URL = "https://cdn.discordapp.com/attachments/1402409732307685446/1508603952944513034/Logo_ssp_litoral.png?ex=6a1775ea&is=6a16246a&hm=9f5f28b3c8d74343efef2539234675316a894643251ae272d876af104df83085&";
 const CARGOS_TICKET = ["1484825744390754407","1484825745313370112",
@@ -74,7 +79,6 @@ const CANALETAS_PONTO = {"1484826105289506836": { batalhaoKey: "QCG", batalhao: 
 "1484826141364715663": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60000" },"1484826143713398844": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60001" },"1484826147152859267": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60018" },"1484826150596382863": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60038" },"1484826152475430962": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60040" },"1500031721641476266": { batalhaoKey: "CORREGEDORIA", batalhao: "Corregedoria", nome: "PDO - 60050" },
 
 "1484826188932448316": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Comando Batalhão | M-22000" },"1484826193306976306": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Sub.Comando Batalhão | M-22001" },"1484826202442043496": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CoordOp | M-22002" },"1484826205696950454": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Supervisão Regional | M-22003" },"1484826208477777940": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CFP | M-22004" },"1484826211254534206": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "CGP UNO | M-22223" },"1484826212844175442": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22132 (Duster PM)" },"1484826217864499220": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22106 (Duster PM)" },"1505616011133456625": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22136 (Spin 2023)" },"1484826219181641738": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-22146 (Spin 2024)" },"1484826222490812428": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23111 (Spin 2024)" },"1484826225313845299": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-28100 (Duster)" },"1484826228493127730": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23117 (Spin 2024)" },"1484826231156244481": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23140 (Duster)" },"1484826235992281088": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23151/152 (Creta)" },"1484826236869148915": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23153/116 (Creta)" },"1484826240052494467": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23165 (Corolla)" },"1484826243017736274": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "M-23168 (Corolla)" },"1484826246226645002": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM UNO (XRE/LANDER)" },"1484826250659889262": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM DOIS (XRE/LANDER)" },"1484826252438147215": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Base Comunitária M-23270" },"1484826277939773551": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "Patrulha Rural" },"1484826281358000259": { batalhaoKey: "22BPM", batalhao: "22º BPM", nome: "RPM TRES (XRE/LANDER)" },
-
 "1484826320436199544": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Comando - M-22001" },"1484826323338919957": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Tático Comando - M-22011" },"1484826325679341598": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "Tático 90 - M-22090" },"1484826330037227520": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22013 - Tático 13" },"1484826331677200506": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22014 - Tático 14" },"1484826336437735485": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22015 - Tático 15" },"1484826339499315294": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22016 - Tático 16" },"1484826343328977020": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22017 - Tático 17" },"1484826352044609547": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22019 - Tático 19" },"1484826356104564816": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "M-22028 - Tático 28" },"1484826357488947222": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "COMANDO ROCAM" },"1484826360412377138": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "CGP ROCAM (Trail 23)" },"1484826364841558069": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "ROCAM UNO" },"1484826375314735194": { batalhaoKey: "FORCA_TATICA", batalhao: "Força Tática", nome: "ROCAM DOIS" },
 
 "1484826382998569081": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "M-3-550/M-3 555/M-3 547" },"1484826386878300242": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 10 (AS350-B3)" },"1484826389843808308": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 19 (AS350-B3)" },"1484826393056378901": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 23 (AS350) GRAU" },"1484826396835713076": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 32 (AW109)" },"1484826400241225830": { batalhaoKey: "CAVPM", batalhao: "CAVPM", nome: "ÁGUIA 33 (EC135)" },
@@ -83,7 +87,6 @@ const CANALETAS_PONTO = {"1484826105289506836": { batalhaoKey: "QCG", batalhao: 
 "1508557841051422842": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COMANDO CPCHOQUE" },"1508558769259548703": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "SUBCOMANDO CPCHOQUE" },"1508559060104908970": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "COORDENAÇÃO CPCHOQUE" },"1508559180645269624": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 005" },"1508559202057064589": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 006" },"1508562463103258837": { batalhaoKey: "CPCHOQUE", batalhao: "CPChoque", nome: "CPCHOQUE 007" },
 
 "1484826485301841991": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Comando BAEP" },"1484826488577720332": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Sub Comando BAEP" },"1484826494370058422": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Coordenador BAEP" },"1484826497360334969": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Supervisão BAEP E-07100" },"1484826500753653770": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "Supervisão BAEP E-07300" },"1484826509565759488": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "BAEP COMANDO E-07106" },"1484826513047031859": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "BAEP COMANDO E-07301" },"1484826514888589333": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07090 BLAZER/TRAIL 22" },"1484826518235385948": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-103/203 SW4" },"1484826521574047754": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07104/204 TRAIL-12" },"1484826526439575552": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07104/204/480 TRAIL 12" },"1484826538863235072": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-210/212/213 TRAIL 21/22" },"1484826542407155734": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-214/215/218/220 TRAIL 21" },"1484826545754341386": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07315/418/470/471" },"1484826548753137667": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07381 - ROCAM BAEP" },"1484826552167436410": { batalhaoKey: "BAEP", batalhao: "BAEP", nome: "E-07385/389 - ROCAM BAEP" },
-
 "1484826637877907528": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO AGUIAR - 91000" },"1484826650653888512": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO ROTA - 91001" },"1484826654013652992": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COORDENADOR AGUIAR" },"1484826655577997362": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "ROTA UNO - 91100" },"1484826661542166619": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "COMANDO 10 - 91102" },"1484826665178890350": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "ROTA 90 - 91090" },"1484826666743234570": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91110 - TRAILBLAZER" },"1484826670925090858": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91111 - TRAILBLAZER" },"1484826676104790098": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91112 - TRAILBLAZER" },"1484826678445477898": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91128 - TRAILBLAZER" },"1484826683847475303": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91132 - TRAILBLAZER" },"1484826696929771662": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "91142 - TRAILBLAZER" },"1484826700117311580": { batalhaoKey: "ROTA", batalhao: "ROTA", nome: "DEJEM ROTA - 3-387" },
 
 "1484826721898201250": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "COMANDO ANCHIETA - 92000" },"1484826724813242408": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "SUBCOMANDO ANCHIETA" },"1484826728625864794": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "COORDENADOR ANCHIETA" },"1484826730454843544": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 1 - 92100" },"1484826736288993404": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 2 - 92200" },"1484826739690442833": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 3 - 92300" },"1484826743062925413": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 4 - 92400" },"1484826745655005217": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 111 - 92111" },"1484826747470872607": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 119 - 92119" },"1484826753015742505": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 205 - 92205" },"1484826754819297421": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 212 - 92212" },"1484826757759500358": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 213 - 92213" },"1484826767729627197": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ANCHIETA 215 - 92215" },"1484826776562827274": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "APOIO ROCAM - 92424" },"1484826780203487272": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ROCAM 425 - 92425" },"1484826783193763900": { batalhaoKey: "ANCHIETA", batalhao: "Anchieta", nome: "ROCAM 427 - 92427" },
@@ -95,8 +98,25 @@ const canaisBI = {ssp: "1484826324530102303",qcg: "1484826160222441523",correged
 const nomesBI = {ssp: "SSP",qcg: "QCG",corregedoria: "Corregedoria",cpchoque: "CPChoque","22bpm": "22º BPM",forca_tatica: "Força Tática",cavpm: "CAVPM",caep: "CAEP",baep: "BAEP",rota: "ROTA",anchieta: "Anchieta",humaita: "Humaitá","4bpchoque": "4º BPChoque"};
 
 const hierarquias = {"coronel": { nome: "Coronel PM", insignia: "[✵✵✵]", cargo: "1484825756331937812" },"tenente_coronel": { nome: "Tenente-Coronel PM", insignia: "[✵✵✧]", cargo: "1484825757271330937" },"major": { nome: "Major PM", insignia: "[✵✧✧]", cargo: "1484825757988552846" },"capitao": { nome: "Capitão PM", insignia: "[✧✧✧]", cargo: "1484825760471449641" },"1tenente": { nome: "1º Tenente PM", insignia: "[✧✧]", cargo: "1484825762258227351" },"2tenente": { nome: "2º Tenente PM", insignia: "[✧]", cargo: "1484825762996551801" },"aspirante": { nome: "Aspirante a Oficial PM", insignia: "[✯]", cargo: "1484825765143908422" },"subtenente": { nome: "Subtenente PM", insignia: "[△]", cargo: "1484825768050823198" },"1sgt": { nome: "1º Sargento PM", insignia: "[❯❯ ❯❯❯]", cargo: "1484825769149730857" },"2sgt": { nome: "2º Sargento PM", insignia: "[❯ ❯❯❯]", cargo: "1484825770055569468" },"3sgt": { nome: "3º Sargento PM", insignia: "[❯❯❯]", cargo: "1484825771552935946" },"cabo": { nome: "Cabo PM", insignia: "[❯❯]", cargo: "1484825775621279845" },"sd1": { nome: "Soldado 1ª Classe PM", insignia: "[❯]", cargo: "1484825776745480222" },"sd2": { nome: "Soldado 2ª Classe PM", insignia: "[•❯]", cargo: "1484825777605316640" }};
-
-const unidades = {"qcg": { nome: "QCG", cargo: "1484825747242618881" },"cpa": { nome: "CPA", cargo: "1484825817539280896" },"cpchoque": { nome: "CPCHOQUE", cargo: "1484825818566885516" },"22bpm": { nome: "22°BPM", cargo: "1484825819191709747" },"baep": { nome: "BAEP", cargo: "1484825824895959060" },"caep": { nome: "CAEP", cargo: "1484825825944797235" },"rota": { nome: "ROTA", cargo: "1484825827018543115" },"anchieta": { nome: "ANCHIETA", cargo: "1484825827974582333" },"humaita": { nome: "HUMAITÁ", cargo: "1484825828809506866" },"coe": { nome: "COE", cargo: "1484825830747013151" },"gate": { nome: "GATE", cargo: "1484825831552581757" }};
+const unidades = {
+  "qcg": { nome: "QCG", cargo: "1484825747242618881" },
+  "corregedoria": { nome: "Corregedoria", cargo: "1484825813269483680" },
+  "cpchoque": { nome: "CPCHOQUE", cargo: "1484825818566885516" },
+  "22bpm": { nome: "22°BPM", cargo: "1484825819191709747" },
+  "forca_tatica": { nome: "Força Tática", cargo: "1484825821473669181" },
+  "cavpm": { nome: "CAVPM", cargo: "1500287874069696572" },
+  "caep": { nome: "CAEP", cargo: "1484825825944797235" },
+  "baep": { nome: "BAEP", cargo: "1484825824895959060" },
+  "rota": { nome: "ROTA", cargo: "1484825827018543115" },
+  "anchieta": { nome: "ANCHIETA", cargo: "1484825827974582333" },
+  "humaita": { nome: "HUMAITÁ", cargo: "1484825828809506866" },
+  "coe": { nome: "COE", cargo: "1484825830747013151" },
+  "gate": { nome: "GATE", cargo: "1484825831552581757" },
+  "policia_civil": { nome: "Polícia Civil", cargo: "1484825988704637000" },
+  "policia_federal": { nome: "Polícia Federal", cargo: "1484825987844804658" },
+  "prf": { nome: "PRF", cargo: "1504240288976212038" },
+  "receita_federal": { nome: "Receita Federal", cargo: "1498108053264928798" }
+};
 
 const cursos = {"sat_a": { nome: "SAT A", cargo: "1484825923760033843" },"sat_b": { nome: "SAT B", cargo: "1484825924624056340" },"pop": { nome: "POP", cargo: "1484825926570217472" },"modulacao": { nome: "Modulação", cargo: "1484825927535038506" },"abordagem": { nome: "ABORDAGEM", cargo: "1484825925446140053" },"tat_1": { nome: "TAT 1", cargo: "1484825928885604474" },"tat_2": { nome: "TAT 2", cargo: "1484825929808347157" },"tat_3": { nome: "TAT 3", cargo: "1484825930940551189" },"copom": { nome: "OPERADOR COPOM", cargo: "1484825922463862795" }};
 
@@ -162,6 +182,11 @@ client.once("ready", async () => {
     new SlashCommandBuilder()
       .setName("painel-ticket")
       .setDescription("Envia o painel fixo de atendimento P1/RH.")
+      .toJSON(),
+
+    new SlashCommandBuilder()
+      .setName("painel-ausencia")
+      .setDescription("Envia o painel de justificativa de ausência.")
       .toJSON()
   ]);
 });
@@ -799,7 +824,46 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     if (interaction.isButton() && interaction.customId === "fechar_ticket") {
       const canalLog = await interaction.guild.channels.fetch(CANAL_LOG_TICKETS).catch(() => null);
+      const mensagens = await interaction.channel.messages.fetch({ limit: 100 }).catch(() => null);
 
+      let transcript = "TRANSCRIPT DO TICKET\n";
+      transcript += `Canal: ${interaction.channel.name}\n`;
+      transcript += `Fechado por: ${interaction.user.tag}\n`;
+      transcript += `Data: ${new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n`;
+      transcript += "----------------------------------------\n\n";
+
+      let donoTicket = null;
+
+      if (mensagens) {
+        const mensagensOrdenadas = mensagens.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+
+        for (const msg of mensagensOrdenadas.values()) {
+          const data = new Date(msg.createdTimestamp).toLocaleString("pt-BR", {
+            timeZone: "America/Sao_Paulo"
+          });
+
+          const mention = msg.content?.match(/<@!?(\d+)>/);
+          if (!donoTicket && mention) {
+            donoTicket = await interaction.guild.members.fetch(mention[1]).catch(() => null);
+          }
+
+          if (!donoTicket && !msg.author.bot && msg.author.id !== interaction.user.id) {
+            donoTicket = await interaction.guild.members.fetch(msg.author.id).catch(() => null);
+          }
+
+          transcript += `[${data}] ${msg.author.tag}: ${msg.content || "[Mensagem sem texto]"}\n`;
+
+          if (msg.attachments.size > 0) {
+            msg.attachments.forEach(anexo => {
+              transcript += `📎 Anexo: ${anexo.url}\n`;
+            });
+          }
+
+          transcript += "\n";
+        }
+      }
+
+      const buffer = Buffer.from(transcript, "utf-8");
       if (canalLog) {
         const logEmbed = new EmbedBuilder()
           .setColor("#FF0000")
@@ -811,11 +875,31 @@ client.on(Events.InteractionCreate, async (interaction) => {
           .setImage(TICKET_BANNER_URL)
           .setTimestamp();
 
-        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+        await canalLog.send({
+          embeds: [logEmbed],
+          files: [
+            {
+              attachment: buffer,
+              name: `transcript-${interaction.channel.name}.txt`
+            }
+          ]
+        }).catch(() => {});
+      }
+
+      if (donoTicket) {
+        await donoTicket.send({
+          content: "📄 Seu ticket de RH foi encerrado. Segue abaixo o transcript do atendimento.",
+          files: [
+            {
+              attachment: buffer,
+              name: `transcript-${interaction.channel.name}.txt`
+            }
+          ]
+        }).catch(() => {});
       }
 
       await interaction.reply({
-        content: "🔒 Ticket fechado. Este canal será excluído em 5 segundos.",
+        content: "🔒 Ticket fechado. Transcript enviado para a log e para o privado do solicitante. Este canal será excluído em 5 segundos.",
         ephemeral: false
       });
 
@@ -823,6 +907,234 @@ client.on(Events.InteractionCreate, async (interaction) => {
         interaction.channel.delete().catch(() => {});
       }, 5000);
     }
+
+    if (interaction.isChatInputCommand() && interaction.commandName === "painel-ausencia") {
+      const embed = new EmbedBuilder()
+        .setColor("#ff7a00")
+        .setTitle("📋 Justificativa de Ausência")
+        .setDescription(
+          "Utilize este painel para justificar sua ausência junto ao setor de **P1/RH**.\n\n" +
+          "Clique no botão abaixo e preencha corretamente:\n" +
+          "• Nome\n" +
+          "• Posto/Graduação\n" +
+          "• Batalhão/Unidade\n" +
+          "• Motivo da ausência\n\n" +
+          "⚠️ O pedido será analisado pelo setor responsável."
+        )
+        .setFooter({ text: "SSP Litoral Paulista • Sistema de Justificativa de Ausência" });
+
+      const botao = new ButtonBuilder()
+        .setCustomId("abrir_ausencia")
+        .setLabel("Justificar Ausência")
+        .setEmoji("📋")
+        .setStyle(ButtonStyle.Primary);
+
+      return interaction.reply({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(botao)]
+      });
+    }
+
+    if (interaction.isButton() && interaction.customId === "abrir_ausencia") {
+      const modal = new ModalBuilder()
+        .setCustomId("modal_ausencia")
+        .setTitle("Justificativa de Ausência");
+
+      const nomeInput = new TextInputBuilder()
+        .setCustomId("nome")
+        .setLabel("Nome")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const graduacaoInput = new TextInputBuilder()
+        .setCustomId("graduacao")
+        .setLabel("Posto/Graduação")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const batalhaoInput = new TextInputBuilder()
+        .setCustomId("batalhao")
+        .setLabel("Batalhão/Unidade")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const motivoInput = new TextInputBuilder()
+        .setCustomId("motivo")
+        .setLabel("Motivo")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(nomeInput),
+        new ActionRowBuilder().addComponents(graduacaoInput),
+        new ActionRowBuilder().addComponents(batalhaoInput),
+        new ActionRowBuilder().addComponents(motivoInput)
+      );
+
+      return interaction.showModal(modal);
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === "modal_ausencia") {
+      const nome = interaction.fields.getTextInputValue("nome");
+      const graduacao = interaction.fields.getTextInputValue("graduacao");
+      const batalhao = interaction.fields.getTextInputValue("batalhao");
+      const motivo = interaction.fields.getTextInputValue("motivo");
+      ausenciasPendentes.set(interaction.user.id, {
+        userId: interaction.user.id,
+        nome,
+        graduacao,
+        batalhao,
+        motivo
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor("#FFD700")
+        .setTitle("📋 Nova Justificativa de Ausência")
+        .addFields(
+          { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
+          { name: "🪪 Nome", value: nome, inline: true },
+          { name: "🎖️ Posto/Graduação", value: graduacao, inline: true },
+          { name: "🏢 Batalhão/Unidade", value: batalhao, inline: true },
+          { name: "📝 Motivo", value: motivo.slice(0, 1000) }
+        )
+        .setFooter({ text: "Aguardando análise do P1/RH" })
+        .setTimestamp();
+
+      const aprovar = new ButtonBuilder()
+        .setCustomId(`aprovar_ausencia_${interaction.user.id}`)
+        .setLabel("Aprovar Ausência")
+        .setEmoji("✅")
+        .setStyle(ButtonStyle.Success);
+
+      const negar = new ButtonBuilder()
+        .setCustomId(`negar_ausencia_${interaction.user.id}`)
+        .setLabel("Negar Ausência")
+        .setEmoji("❌")
+        .setStyle(ButtonStyle.Danger);
+
+      const canalAnalise = await interaction.guild.channels.fetch(CANAL_AUSENCIAS_ANALISE).catch(() => null);
+
+      if (canalAnalise) {
+        await canalAnalise.send({
+          content: `<@&${CARGO_P1HR}> nova justificativa de ausência para análise.`,
+          embeds: [embed],
+          components: [new ActionRowBuilder().addComponents(aprovar, negar)]
+        });
+      }
+
+      return interaction.reply({
+        content: "✅ Sua justificativa de ausência foi enviada para análise do P1/RH.",
+        ephemeral: true
+      });
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith("aprovar_ausencia_")) {
+      await interaction.deferUpdate();
+
+      if (!interaction.member.roles.cache.has(CARGO_P1HR) && !interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+        return interaction.followUp({
+          content: "❌ Apenas P1-HR pode aprovar justificativas de ausência.",
+          ephemeral: true
+        });
+      }
+
+      const userId = interaction.customId.replace("aprovar_ausencia_", "");
+      const dados = ausenciasPendentes.get(userId);
+
+      if (!dados) {
+        return interaction.followUp({
+          content: "❌ Solicitação de ausência não encontrada ou o bot foi reiniciado.",
+          ephemeral: true
+        });
+      }
+
+      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+
+      if (!membro) {
+        return interaction.followUp({
+          content: "❌ Membro não encontrado no servidor.",
+          ephemeral: true
+        });
+      }
+
+      await membro.roles.add(CARGO_AUSENCIA_JUSTIFICADA).catch(() => {});
+
+      await membro.send({
+        content: "✅ Sua justificativa de ausência foi aprovada pelo P1/RH. A tag **AUSEN.JUST.** foi aplicada."
+      }).catch(() => {});
+
+      const canalLog = await interaction.guild.channels.fetch(CANAL_AUSENCIAS_LOG).catch(() => null);
+
+      if (canalLog) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#00FF7F")
+          .setTitle("✅ Ausência Justificada Aprovada")
+          .addFields(
+            { name: "👤 Militar", value: `<@${userId}>`, inline: true },
+            { name: "🪪 Nome", value: dados.nome, inline: true },
+            { name: "🎖️ Posto/Graduação", value: dados.graduacao, inline: true },
+            { name: "🏢 Batalhão/Unidade", value: dados.batalhao, inline: true },
+            { name: "👮 Aprovado por", value: `${interaction.user}`, inline: true },
+            { name: "📝 Motivo", value: dados.motivo.slice(0, 1000) }
+          )
+          .setTimestamp();
+
+        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+      }
+
+      ausenciasPendentes.delete(userId);
+      const aprovadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+        .setColor("#00FF7F")
+        .setFooter({ text: `Ausência aprovada por ${interaction.user.tag}` });
+
+      return interaction.message.edit({
+        content: "✅ Justificativa de ausência aprovada.",
+        embeds: [aprovadoEmbed],
+        components: []
+      });
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith("negar_ausencia_")) {
+      await interaction.deferUpdate();
+
+      if (!interaction.member.roles.cache.has(CARGO_P1HR) && !interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+        return interaction.followUp({
+          content: "❌ Apenas P1-HR pode negar justificativas de ausência.",
+          ephemeral: true
+        });
+      }
+
+      const userId = interaction.customId.replace("negar_ausencia_", "");
+      const dados = ausenciasPendentes.get(userId);
+
+      if (!dados) {
+        return interaction.followUp({
+          content: "❌ Solicitação de ausência não encontrada ou o bot foi reiniciado.",
+          ephemeral: true
+        });
+      }
+
+      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+
+      if (membro) {
+        await membro.send({
+          content: "❌ Sua justificativa de ausência foi negada pelo P1/RH. Abra um ticket no RH para tentar solicitar outra ausência."
+        }).catch(() => {});
+      }
+
+      ausenciasPendentes.delete(userId);
+
+      const negadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+        .setColor("#FF0000")
+        .setFooter({ text: `Ausência negada por ${interaction.user.tag}` });
+
+      return interaction.message.edit({
+        content: "❌ Justificativa de ausência negada.",
+        embeds: [negadoEmbed],
+        components: []
+      });
+    }
+
   } catch (err) {
     console.error(err);
 
