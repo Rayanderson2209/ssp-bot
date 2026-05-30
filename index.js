@@ -734,9 +734,29 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      await canal.send({
-        content: montarTextoBI(dados)
-      });
+     const textoBI = montarTextoBI(dados);
+
+if (textoBI.length > 1900) {
+
+  const buffer = Buffer.from(textoBI, "utf-8");
+
+  await canal.send({
+    content: "📄 Boletim Interno em arquivo:",
+    files: [
+      {
+        attachment: buffer,
+        name: `boletim-${dados.numero || "sem-numero"}.txt`
+      }
+    ]
+  });
+
+} else {
+
+  await canal.send({
+    content: textoBI
+  });
+
+}
 
       boletins.delete(interaction.user.id);
 
