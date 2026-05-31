@@ -256,7 +256,7 @@ const hierarquias = {
     nome: "Soldado 2ª Classe PM",
     insignia: "[•❯]",
     cargo: "1484825777605316640"
-  }
+  },
 
   "dir": {
     nome: "Diretor",
