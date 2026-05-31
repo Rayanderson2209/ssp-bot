@@ -1,4 +1,5 @@
 require("dotenv").config();
+const fs = require("fs");
 
 const {
   Client,
@@ -42,6 +43,10 @@ const pendentes = new Map();
 const boletins = new Map();
 const pontosRegistrados = new Map();
 const ausenciasPendentes = new Map();
+
+const FUNCIONAL_VALIDADE_MS = 12 * 60 * 60 * 1000;
+const ARQUIVO_FUNCIONAIS_PENDENTES = "./funcionais_pendentes.json";
+const LIMITE_PARTE_BI = 1500;
 
 const CANAL_FUNCIONAL = "1484826121697628221";
 const CANAL_LOG_FUNCIONAL = "1484826214915899412";
@@ -337,6 +342,16 @@ const unidades = {
   receita_federal: {
     nome: "Receita Federal",
     cargo: "1498108053264928798"
+  },
+
+  bombeiros: {
+    nome: "Bombeiros",
+    cargo: "1484825832299040840"
+  },
+
+  judiciario: {
+    nome: "Judiciário",
+    cargo: "1510703380866273330"
   }
 };
 
@@ -391,8 +406,144 @@ const cursos = {
   copom: {
     nome: "OPERADOR COPOM",
     cargo: "1484825922463862795"
+  },
+
+  ccb_bombeiros: {
+    nome: "CCB - Comando do Corpo de Bombeiros",
+    cargo: "1484825909000146965"
+  },
+
+  subcomandante_bombeiros: {
+    nome: "Sub Comandante - Bombeiros",
+    cargo: "1484825910338257019"
+  },
+
+  juiz: {
+    nome: "Juiz",
+    cargo: "1489652435453743194"
+  },
+
+  tribunal_justica: {
+    nome: "Tribunal de Justiça",
+    cargo: "1489652487106596914"
   }
 };
+function salvarFuncionaisPendentes() {
+  const dados = Array.from(pendentes.entries());
+  fs.writeFileSync(
+    ARQUIVO_FUNCIONAIS_PENDENTES,
+    JSON.stringify(dados, null, 2),
+    "utf-8"
+  );
+}
+
+function carregarFuncionaisPendentes() {
+  if (!fs.existsSync(ARQUIVO_FUNCIONAIS_PENDENTES)) return;
+
+  try {
+    const conteudo = fs.readFileSync(ARQUIVO_FUNCIONAIS_PENDENTES, "utf-8");
+    const dados = JSON.parse(conteudo);
+
+    pendentes.clear();
+
+    for (const [userId, item] of dados) {
+      pendentes.set(userId, item);
+    }
+  } catch (err) {
+    console.error("Erro ao carregar funcionais pendentes:", err);
+  }
+}
+
+async function recusarFuncionalExpirada(userId) {
+  const dados = pendentes.get(userId);
+  if (!dados) return;
+
+  const guild = await client.guilds.fetch(dados.guildId).catch(() => null);
+  if (!guild) return;
+
+  const membro = await guild.members.fetch(userId).catch(() => null);
+
+  if (membro) {
+    const todosCargosHierarquia = Object.values(hierarquias).map(x => x.cargo);
+    const todosCargosUnidade = Object.values(unidades).map(x => x.cargo);
+    const todosCargosCursos = Object.values(cursos).map(x => x.cargo);
+
+    await membro.roles.remove(todosCargosHierarquia).catch(() => {});
+    await membro.roles.remove(todosCargosUnidade).catch(() => {});
+    await membro.roles.remove(todosCargosCursos).catch(() => {});
+    await membro.roles.add(CARGO_VUNESP).catch(() => {});
+
+    await membro.send({
+      content: "⏰ Sua solicitação de funcional expirou após 12 horas sem análise e foi recusada automaticamente."
+    }).catch(() => {});
+  }
+
+  const canal = await guild.channels.fetch(dados.channelId).catch(() => null);
+
+  if (canal && dados.messageId) {
+    const mensagem = await canal.messages.fetch(dados.messageId).catch(() => null);
+
+    if (mensagem) {
+      const embedAntigo = mensagem.embeds[0];
+
+      const expiradoEmbed = embedAntigo
+        ? EmbedBuilder.from(embedAntigo)
+            .setColor("#FF0000")
+            .setFooter({ text: "Funcional recusada automaticamente por expiração de 12 horas" })
+        : new EmbedBuilder()
+            .setColor("#FF0000")
+            .setTitle("⏰ Funcional Expirada")
+            .setDescription(`<@${userId}> teve a funcional recusada automaticamente por expiração.`)
+            .setTimestamp();
+
+      await mensagem.edit({
+        content: "⏰ Funcional expirada e recusada automaticamente.",
+        embeds: [expiradoEmbed],
+        components: []
+      }).catch(() => {});
+    }
+  }
+
+  pendentes.delete(userId);
+  salvarFuncionaisPendentes();
+}
+
+function agendarExpiracaoFuncional(userId) {
+  const dados = pendentes.get(userId);
+  if (!dados) return;
+
+  const tempoRestante = dados.expiresAt - Date.now();
+
+  if (tempoRestante <= 0) {
+    recusarFuncionalExpirada(userId);
+    return;
+  }
+
+  setTimeout(() => {
+    recusarFuncionalExpirada(userId);
+  }, Math.min(tempoRestante, 2147483647));
+}
+
+function agendarTodasFuncionaisPendentes() {
+  for (const userId of pendentes.keys()) {
+    agendarExpiracaoFuncional(userId);
+  }
+}
+
+function limitarTexto(texto, limite = LIMITE_PARTE_BI) {
+  if (!texto) return "";
+  return texto.length > limite ? texto.slice(0, limite) : texto;
+}
+
+function tamanhoPartesBI(dados) {
+  return {
+    parte1: (dados.parte1 || "").length,
+    parte2: (dados.parte2 || "").length,
+    parte3: (dados.parte3 || "").length,
+    parte4: (dados.parte4 || "").length
+  };
+}
+
 function montarTextoBI(dados) {
   const agora = new Date();
 
@@ -478,6 +629,9 @@ function botoesBI() {
 client.once("ready", async () => {
   console.log(`✅ Bot online como ${client.user.tag}`);
 
+  carregarFuncionaisPendentes();
+  agendarTodasFuncionaisPendentes();
+
   await client.application.commands.set([
     new SlashCommandBuilder()
       .setName("painel-funcional")
@@ -559,7 +713,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       return interaction.update({
         content:
-          `📋 Boletim selecionado para: **${nomesBI[dados.unidade]}**\n\nAgora preencha cada parte.`,
+          `📋 Boletim selecionado para: **${nomesBI[dados.unidade]}**\n\nAgora preencha cada parte. Limite de cada parte: **${LIMITE_PARTE_BI} caracteres**.`,
         components: botoesBI()
       });
     }
@@ -589,8 +743,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         const textoInput = new TextInputBuilder()
           .setCustomId("texto")
-          .setLabel("1ª Parte - Serviços Diários")
+          .setLabel(`1ª Parte - Serviços Diários`)
+          .setPlaceholder(`Limite: ${LIMITE_PARTE_BI} caracteres`)
           .setStyle(TextInputStyle.Paragraph)
+          .setMaxLength(LIMITE_PARTE_BI)
           .setRequired(false);
 
         modal.addComponents(
@@ -609,7 +765,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const textoInput = new TextInputBuilder()
           .setCustomId("texto")
           .setLabel(labels[interaction.customId])
+          .setPlaceholder(`Limite: ${LIMITE_PARTE_BI} caracteres`)
           .setStyle(TextInputStyle.Paragraph)
+          .setMaxLength(LIMITE_PARTE_BI)
           .setRequired(false);
 
         modal.addComponents(
@@ -640,7 +798,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       const texto =
-        interaction.fields.getTextInputValue("texto") || "";
+        limitarTexto(interaction.fields.getTextInputValue("texto") || "");
 
       if (interaction.customId === "modal_bi_parte1") {
         dados.numero =
@@ -665,7 +823,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       return interaction.reply({
         content:
-          "✅ Parte salva com sucesso.",
+          `✅ Parte salva com sucesso. Limite: ${LIMITE_PARTE_BI} caracteres por parte.`,
         ephemeral: true
       });
     }
@@ -685,8 +843,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
+      const textoBI = montarTextoBI(dados);
+      const tamanhos = tamanhoPartesBI(dados);
+
+      if (textoBI.length > 1900) {
+        return interaction.reply({
+          content:
+            "👁️ Prévia grande demais para uma única mensagem do Discord.\n\n" +
+            `📏 Limite por parte: ${LIMITE_PARTE_BI} caracteres.\n` +
+            `1ª Parte: ${tamanhos.parte1}/${LIMITE_PARTE_BI}\n` +
+            `2ª Parte: ${tamanhos.parte2}/${LIMITE_PARTE_BI}\n` +
+            `3ª Parte: ${tamanhos.parte3}/${LIMITE_PARTE_BI}\n` +
+            `4ª Parte: ${tamanhos.parte4}/${LIMITE_PARTE_BI}\n\n` +
+            "✅ Na publicação, o bot enviará o boletim em mensagens separadas, sem arquivo .txt.",
+          ephemeral: true
+        });
+      }
+
       return interaction.reply({
-        content: montarTextoBI(dados),
+        content: textoBI,
         ephemeral: true
       });
     }
@@ -734,29 +909,57 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-     const textoBI = montarTextoBI(dados);
+      const textoBI = montarTextoBI(dados);
 
-if (textoBI.length > 1900) {
+      if (textoBI.length <= 1900) {
+        await canal.send({
+          content: textoBI
+        });
+      } else {
+        const agora = new Date();
 
-  const buffer = Buffer.from(textoBI, "utf-8");
+        const data = agora.toLocaleDateString("pt-BR", {
+          timeZone: "America/Sao_Paulo"
+        });
 
-  await canal.send({
-    content: "📄 Boletim Interno em arquivo:",
-    files: [
-      {
-        attachment: buffer,
-        name: `boletim-${dados.numero || "sem-numero"}.txt`
+        const hora = agora.toLocaleTimeString("pt-BR", {
+          timeZone: "America/Sao_Paulo",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+
+        await canal.send({
+          content:
+            `# BOLETIM GERAL - POLÍCIA MILITAR DO ESTADO DE SÃO PAULO\n\n` +
+            `**Unidade:** ${nomesBI[dados.unidade] || "Não informada"}\n` +
+            `BOLETIM GERAL Nº ${dados.numero || "___"}/2026`
+        });
+
+        await canal.send({
+          content:
+            `📁 | **1º PARTE SERVIÇOS DIÁRIOS:**\n` +
+            `${dados.parte1 || "Sem alterações."}`
+        });
+
+        await canal.send({
+          content:
+            `📁 | **2º PARTE INSTRUÇÃO E OPERAÇÕES POLICIAIS MILITARES:**\n` +
+            `${dados.parte2 || "Sem alterações."}`
+        });
+
+        await canal.send({
+          content:
+            `📁 | **3º PARTE ASSUNTOS GERAIS E ADMINISTRATIVOS:**\n` +
+            `${dados.parte3 || "Sem alterações."}`
+        });
+
+        await canal.send({
+          content:
+            `📁 | **4º PARTE JUSTIÇA E DISCIPLINA:**\n` +
+            `${dados.parte4 || "Sem alterações."}\n\n` +
+            `Secretaria da Segurança Pública - Polícia Militar • ${data} ${hora}h`
+        });
       }
-    ]
-  });
-
-} else {
-
-  await canal.send({
-    content: textoBI
-  });
-
-}
 
       boletins.delete(interaction.user.id);
 
@@ -952,12 +1155,16 @@ if (textoBI.length > 1900) {
 
       pendentes.set(interaction.user.id, {
         userId: interaction.user.id,
+        guildId: interaction.guild.id,
         nome: sessao.nome,
         rg: sessao.rg,
         patenteKey: sessao.patente,
         unidadeKey: sessao.unidade,
         cursosKeys: sessao.cursos,
-        novoNick
+        novoNick,
+        expiresAt: Date.now() + FUNCIONAL_VALIDADE_MS,
+        messageId: null,
+        channelId: CANAL_LOG_FUNCIONAL
       });
 
       const logEmbed = new EmbedBuilder()
@@ -1002,6 +1209,11 @@ if (textoBI.length > 1900) {
           {
             name: "🏷️ Nickname",
             value: novoNick
+          },
+
+          {
+            name: "⏰ Validade",
+            value: "Esta solicitação expira automaticamente em 12 horas."
           }
         )
         .setTimestamp();
@@ -1028,7 +1240,7 @@ if (textoBI.length > 1900) {
           .catch(() => null);
 
       if (canalLog) {
-        await canalLog.send({
+        const mensagemLog = await canalLog.send({
           embeds: [logEmbed],
           components: [
             new ActionRowBuilder().addComponents(
@@ -1037,11 +1249,26 @@ if (textoBI.length > 1900) {
             )
           ]
         });
+
+        const dadosPendentes = pendentes.get(interaction.user.id);
+
+        if (dadosPendentes) {
+          dadosPendentes.messageId = mensagemLog.id;
+          dadosPendentes.channelId = canalLog.id;
+          pendentes.set(interaction.user.id, dadosPendentes);
+          salvarFuncionaisPendentes();
+          agendarExpiracaoFuncional(interaction.user.id);
+        }
+      }
+
+      if (!canalLog) {
+        salvarFuncionaisPendentes();
+        agendarExpiracaoFuncional(interaction.user.id);
       }
 
       await interaction.user.send({
         content:
-          "📨 Sua funcional foi enviada para análise."
+          "📨 Sua funcional foi enviada para análise. Ela ficará disponível por 12 horas."
       }).catch(() => {});
 
       sessoes.delete(interaction.user.id);
@@ -1072,7 +1299,17 @@ if (textoBI.length > 1900) {
       if (!dados) {
         return interaction.followUp({
           content:
-            "❌ Solicitação não encontrada.",
+            "❌ Solicitação não encontrada ou já expirada.",
+          ephemeral: true
+        });
+      }
+
+      if (dados.expiresAt && Date.now() > dados.expiresAt) {
+        await recusarFuncionalExpirada(userId);
+
+        return interaction.followUp({
+          content:
+            "⏰ Esta funcional expirou após 12 horas e foi recusada automaticamente.",
           ephemeral: true
         });
       }
@@ -1142,6 +1379,7 @@ if (textoBI.length > 1900) {
       }).catch(() => {});
 
       pendentes.delete(userId);
+      salvarFuncionaisPendentes();
 
       const aprovadoEmbed =
         EmbedBuilder.from(
@@ -1179,7 +1417,17 @@ if (textoBI.length > 1900) {
       if (!dados) {
         return interaction.followUp({
           content:
-            "❌ Solicitação não encontrada.",
+            "❌ Solicitação não encontrada ou já expirada.",
+          ephemeral: true
+        });
+      }
+
+      if (dados.expiresAt && Date.now() > dados.expiresAt) {
+        await recusarFuncionalExpirada(userId);
+
+        return interaction.followUp({
+          content:
+            "⏰ Esta funcional expirou após 12 horas e foi recusada automaticamente.",
           ephemeral: true
         });
       }
@@ -1229,6 +1477,7 @@ if (textoBI.length > 1900) {
       }
 
       pendentes.delete(userId);
+      salvarFuncionaisPendentes();
 
       const negadoEmbed =
         EmbedBuilder.from(
