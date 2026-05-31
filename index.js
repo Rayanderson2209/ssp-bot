@@ -257,6 +257,42 @@ const hierarquias = {
     insignia: "[•❯]",
     cargo: "1484825777605316640"
   }
+
+  "dir": {
+    nome: "Diretor",
+    insignia: "DIR",
+    cargo: "1510744383761420490"
+  },
+
+  "agt": {
+    nome: "Agente",
+    insignia: "AGT",
+    cargo: "1510744274407264540"
+  },
+
+  "juiz": {
+    nome: "Juiz",
+    insignia: "JUIZ",
+    cargo: "1489652435453743194"
+  },
+
+  "min": {
+    nome: "Ministro",
+    insignia: "MIN",
+    cargo: "1510741726615175198"
+  },
+
+  "mp": {
+    nome: "Ministério Público",
+    insignia: "MP",
+    cargo: "1510742364212302005"
+  },
+
+  "pj": {
+    nome: "Polícia Judiciária",
+    insignia: "PJ",
+    cargo: "1510744042118578196"
+  },
 };
 const unidades = {
   qcg: {
