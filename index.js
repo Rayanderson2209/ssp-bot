@@ -354,7 +354,6 @@ const unidades = {
     nome: "COE",
     cargo: "1484825830747013151"
   },
-
   gate: {
     nome: "GATE",
     cargo: "1484825831552581757"
@@ -707,7 +706,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         parte3: "",
         parte4: ""
       });
-
       const menuBI = new StringSelectMenuBuilder()
         .setCustomId("selecionar_bi")
         .setPlaceholder("Selecione a unidade do boletim")
@@ -1045,7 +1043,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setLabel("Nome completo")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
-
       const rgInput = new TextInputBuilder()
         .setCustomId("rg")
         .setLabel("RG/Passaporte")
@@ -1390,7 +1387,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await membro.roles
         .remove(CARGO_VUNESP)
         .catch(() => {});
-
       await membro.roles
         .add(patente.cargo)
         .catch(() => {});
@@ -1764,7 +1760,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.guild.channels
           .fetch(CANAL_LOG_TICKETS)
           .catch(() => null);
-
       if (canalLog) {
 
         const logEmbed =
@@ -2574,6 +2569,33 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
       await canalLogGeral.send({
         embeds: [embed]
       }).catch(() => {});
+    }
+
+    const nomeCanal = canalAtual.name.toLowerCase();
+
+    let unidadePonto = null;
+
+    if (
+      nomeCanal.includes("pontos-ft") ||
+      nomeCanal.includes("força tática") ||
+      nomeCanal.includes("forca tatica") ||
+      nomeCanal.includes("forca-tatica") ||
+      nomeCanal.includes("ft")
+    ) {
+      unidadePonto = "FORCA_TATICA";
+    }
+
+    if (unidadePonto && CANAIS_LOG_PONTO[unidadePonto]) {
+      const canalLogUnidade =
+        await newState.guild.channels
+          .fetch(CANAIS_LOG_PONTO[unidadePonto])
+          .catch(() => null);
+
+      if (canalLogUnidade) {
+        await canalLogUnidade.send({
+          embeds: [embed]
+        }).catch(() => {});
+      }
     }
 
     pontosRegistrados.set(canalAtual.id, {
