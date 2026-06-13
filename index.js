@@ -129,7 +129,8 @@ const CANAL_LOG_PONTOS_GERAL = "1484826135178248222";
 const CANAIS_LOG_PONTO = {
   QCG: "1508864434007834644",
   CORREGEDORIA: "1508864278311207012",
-  "22BPM": "1484826391340912650",
+  CPA: "1515364306873487530",
+  "28BPM": "1484826391340912650",
   FORCA_TATICA: "1484826438572965950",
   CAVPM: "1484826472265814046",
   CAEP: "1484826498962817034",
@@ -144,6 +145,7 @@ const CANAIS_LOG_PONTO = {
 const canaisBI = {
   ssp: "1484826324530102303",
   qcg: "1484826160222441523",
+  cpa: "1514029964255563967",
   corregedoria: "1484826324530102303",
   cpchoque: "1500288574162210886",
   "22bpm": "1484826380788174868",
@@ -160,9 +162,10 @@ const canaisBI = {
 const nomesBI = {
   ssp: "SSP",
   qcg: "QCG",
+  cpa: "CPA",
   corregedoria: "Corregedoria",
   cpchoque: "CPChoque",
-  "22bpm": "22º BPM",
+  "22bpm": "28º BPM",
   forca_tatica: "Força Tática",
   cavpm: "CAVPM",
   caep: "CAEP",
@@ -300,6 +303,11 @@ const unidades = {
     cargo: "1484825747242618881"
   },
 
+  cpa: {
+    nome: "CPA",
+    cargo: "1484825817539280896"
+  },
+
   corregedoria: {
     nome: "Corregedoria",
     cargo: "1484825813269483680"
@@ -311,7 +319,7 @@ const unidades = {
   },
 
   "22bpm": {
-    nome: "22° BPM",
+    nome: "28° BPM",
     cargo: "1484825819191709747"
   },
 
@@ -432,7 +440,6 @@ const cursos = {
     nome: "TAT 2",
     cargo: "1484825929808347157"
   },
-
   tat_3: {
     nome: "TAT 3",
     cargo: "1484825930940551189"
@@ -712,9 +719,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .addOptions([
           { label: "SSP", value: "ssp" },
           { label: "QCG", value: "qcg" },
+          { label: "CPA", value: "cpa" },
           { label: "Corregedoria", value: "corregedoria" },
           { label: "CPChoque", value: "cpchoque" },
-          { label: "22º BPM", value: "22bpm" },
+          { label: "28º BPM", value: "22bpm" },
           { label: "Força Tática", value: "forca_tatica" },
           { label: "CAVPM", value: "cavpm" },
           { label: "CAEP", value: "caep" },
@@ -1043,6 +1051,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         .setLabel("Nome completo")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
+
       const rgInput = new TextInputBuilder()
         .setCustomId("rg")
         .setLabel("RG/Passaporte")
@@ -1095,6 +1104,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ephemeral: true
       });
     }
+
     if (
       interaction.isStringSelectMenu() &&
       interaction.customId === "selecionar_patente"
@@ -1312,6 +1322,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: []
       });
     }
+
     if (
       interaction.isButton() &&
       interaction.customId.startsWith(
@@ -1387,6 +1398,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await membro.roles
         .remove(CARGO_VUNESP)
         .catch(() => {});
+
       await membro.roles
         .add(patente.cargo)
         .catch(() => {});
@@ -1429,6 +1441,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: []
       });
     }
+
     if (
       interaction.isButton() &&
       interaction.customId.startsWith(
@@ -1619,6 +1632,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       return interaction.showModal(modal);
     }
+
     if (
       interaction.isModalSubmit() &&
       interaction.customId.startsWith(
@@ -1738,6 +1752,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             }
           )
           .setTimestamp();
+
       const fechar =
         new ButtonBuilder()
           .setCustomId("fechar_ticket")
@@ -1760,6 +1775,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.guild.channels
           .fetch(CANAL_LOG_TICKETS)
           .catch(() => null);
+
       if (canalLog) {
 
         const logEmbed =
@@ -1846,6 +1862,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           }
         }
       }
+
       const buffer =
         Buffer.from(transcript, "utf-8");
 
@@ -1991,6 +2008,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       return interaction.showModal(modal);
     }
+
     if (
       interaction.isModalSubmit() &&
       interaction.customId === "modal_ausencia"
@@ -2096,6 +2114,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ephemeral: true
       });
     }
+
     if (
       interaction.isButton() &&
       interaction.customId.startsWith("aprovar_ausencia_")
@@ -2208,6 +2227,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
           embeds: [logEmbed]
         }).catch(() => {});
       }
+
       ausenciasPendentes.delete(userId);
 
       const aprovadoEmbed =
@@ -2313,6 +2333,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 });
+
 client.on(Events.GuildMemberAdd, async (member) => {
 
   const canal =
@@ -2387,6 +2408,7 @@ client.on(Events.GuildMemberRemove, async (member) => {
     }
   }
 });
+
 client.on(Events.GuildBanAdd, async (ban) => {
 
   const canal =
@@ -2461,6 +2483,7 @@ client.on(Events.MessageDelete, async (message) => {
     embeds: [embed]
   }).catch(() => {});
 });
+
 client.on(Events.InviteCreate, async (invite) => {
 
   const canal =
@@ -2576,6 +2599,12 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     let unidadePonto = null;
 
     if (
+      nomeCanal.includes("cpa") ||
+      nomeCanal.includes("m-cpa") ||
+      nomeCanal.includes("comando cpa")
+    ) {
+      unidadePonto = "CPA";
+    } else if (
       nomeCanal.includes("pontos-ft") ||
       nomeCanal.includes("força tática") ||
       nomeCanal.includes("forca tatica") ||
@@ -2583,6 +2612,56 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
       nomeCanal.includes("ft")
     ) {
       unidadePonto = "FORCA_TATICA";
+    } else if (
+      nomeCanal.includes("28") ||
+      nomeCanal.includes("22") ||
+      nomeCanal.includes("bpm")
+    ) {
+      unidadePonto = "28BPM";
+    } else if (
+      nomeCanal.includes("qcg")
+    ) {
+      unidadePonto = "QCG";
+    } else if (
+      nomeCanal.includes("corregedoria")
+    ) {
+      unidadePonto = "CORREGEDORIA";
+    } else if (
+      nomeCanal.includes("cav")
+    ) {
+      unidadePonto = "CAVPM";
+    } else if (
+      nomeCanal.includes("caep")
+    ) {
+      unidadePonto = "CAEP";
+    } else if (
+      nomeCanal.includes("choque") ||
+      nomeCanal.includes("cpchoque")
+    ) {
+      unidadePonto = "CPCHOQUE";
+    } else if (
+      nomeCanal.includes("baep")
+    ) {
+      unidadePonto = "BAEP";
+    } else if (
+      nomeCanal.includes("rota")
+    ) {
+      unidadePonto = "ROTA";
+    } else if (
+      nomeCanal.includes("anchieta")
+    ) {
+      unidadePonto = "ANCHIETA";
+    } else if (
+      nomeCanal.includes("humaita") ||
+      nomeCanal.includes("humaitá")
+    ) {
+      unidadePonto = "HUMAITA";
+    } else if (
+      nomeCanal.includes("4bp") ||
+      nomeCanal.includes("4º") ||
+      nomeCanal.includes("4°")
+    ) {
+      unidadePonto = "4BPCHOQUE";
     }
 
     if (unidadePonto && CANAIS_LOG_PONTO[unidadePonto]) {
