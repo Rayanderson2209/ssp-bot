@@ -1,3 +1,6 @@
+require("dotenv").config();
+const fs = require("fs");
+
 const { Jimp, loadFont, HorizontalAlign } = require("jimp");
 const { SANS_32_BLACK, SANS_24_BLACK } = require("jimp/fonts");
 
