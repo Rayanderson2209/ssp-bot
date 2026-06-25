@@ -9,6 +9,7 @@ const FONT_SANS_32_BLACK =
 
 const FONT_SANS_24_BLACK =
   jimpFonts.SANS_24_BLACK || jimpFonts.default?.SANS_24_BLACK;
+
 const {
   Client,
   GatewayIntentBits,
