@@ -1,9 +1,14 @@
 require("dotenv").config();
 const fs = require("fs");
-const { Jimp, loadFont } = require("jimp");
-const FONT_SANS_32_BLACK = require("@jimp/plugin-print/fonts/open-sans/open-sans-32-black/open-sans-32-black.fnt");
-const FONT_SANS_24_BLACK = require("@jimp/plugin-print/fonts/open-sans/open-sans-24-black/open-sans-24-black.fnt");
 
+const { Jimp, loadFont } = require("jimp");
+const jimpFonts = require("jimp/fonts");
+
+const FONT_SANS_32_BLACK =
+  jimpFonts.SANS_32_BLACK || jimpFonts.default?.SANS_32_BLACK;
+
+const FONT_SANS_24_BLACK =
+  jimpFonts.SANS_24_BLACK || jimpFonts.default?.SANS_24_BLACK;
 const {
   Client,
   GatewayIntentBits,
@@ -772,7 +777,7 @@ async function gerarCertificadoImagem({ nome, rg, curso }) {
 
   const imagem = await Jimp.read(CERTIFICADO_BASE);
 
-  const fonteNome = await loadFont(FONT_SANS_32_BLACK);
+const fonteNome = await loadFont(FONT_SANS_32_BLACK);
 const fonteCurso = await loadFont(FONT_SANS_32_BLACK);
 const fonteRg = await loadFont(FONT_SANS_24_BLACK);
 
@@ -803,7 +808,7 @@ const fonteRg = await loadFont(FONT_SANS_24_BLACK);
     y: 455,
     text: {
       text: curso.toUpperCase(),
-      alignmentX: HorizontalAlign.CENTER
+alignmentX: "center"
     },
     maxWidth: 760,
     maxHeight: 45
