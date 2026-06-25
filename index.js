@@ -1,6 +1,5 @@
-require("dotenv").config();
-const fs = require("fs");
-const Jimp = require("jimp");
+const { Jimp, loadFont, HorizontalAlign } = require("jimp");
+const { SANS_32_BLACK, SANS_24_BLACK } = require("jimp/fonts");
 
 const {
   Client,
@@ -770,49 +769,46 @@ async function gerarCertificadoImagem({ nome, rg, curso }) {
 
   const imagem = await Jimp.read(CERTIFICADO_BASE);
 
-  const fonteNome = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
-  const fonteCurso = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
-  const fonteRg = await Jimp.loadFont(Jimp.FONT_SANS_24_BLACK);
+  const fonteNome = await loadFont(SANS_32_BLACK);
+  const fonteCurso = await loadFont(SANS_32_BLACK);
+  const fonteRg = await loadFont(SANS_24_BLACK);
 
-  imagem.print(
-    fonteNome,
-    515,
-    385,
-    {
+  imagem.print({
+    font: fonteNome,
+    x: 515,
+    y: 385,
+    text: {
       text: nome.toUpperCase(),
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+      alignmentX: HorizontalAlign.CENTER
     },
-    450,
-    45
-  );
+    maxWidth: 450,
+    maxHeight: 45
+  });
 
-  imagem.print(
-    fonteRg,
-    1005,
-    390,
-    {
-      text: rg,
-      alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
-    },
-    220,
-    35
-  );
+  imagem.print({
+    font: fonteRg,
+    x: 1005,
+    y: 390,
+    text: rg,
+    maxWidth: 220,
+    maxHeight: 35
+  });
 
-  imagem.print(
-    fonteCurso,
-    345,
-    455,
-    {
+  imagem.print({
+    font: fonteCurso,
+    x: 345,
+    y: 455,
+    text: {
       text: curso.toUpperCase(),
-      alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER
+      alignmentX: HorizontalAlign.CENTER
     },
-    760,
-    45
-  );
+    maxWidth: 760,
+    maxHeight: 45
+  });
 
   const saida = `./certificado_${Date.now()}.png`;
 
-  await imagem.writeAsync(saida);
+  await imagem.write(saida);
 
   return saida;
 }
