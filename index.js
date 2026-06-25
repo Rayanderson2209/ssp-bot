@@ -1,6 +1,5 @@
 require("dotenv").config();
 const fs = require("fs");
-const path = require("path");
 const Jimp = require("jimp");
 
 const {
@@ -19,6 +18,7 @@ const {
   PermissionsBitField,
   ChannelType,
   SlashCommandBuilder,
+  AuditLogEvent,
   AttachmentBuilder
 } = require("discord.js");
 
@@ -28,9 +28,9 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildInvites,
     GatewayIntentBits.GuildModeration,
-    GatewayIntentBits.GuildInvites
+    GatewayIntentBits.GuildVoiceStates
   ],
   partials: [
     Partials.Channel,
@@ -43,12 +43,20 @@ const client = new Client({
 const sessoes = new Map();
 const pendentes = new Map();
 const boletins = new Map();
-const certificados = new Map();
 const pontosRegistrados = new Map();
+const ausenciasPendentes = new Map();
+const certificados = new Map();
 const presencasCursos = new Map();
 
 const FUNCIONAL_VALIDADE_MS = 12 * 60 * 60 * 1000;
+const ARQUIVO_FUNCIONAIS_PENDENTES = "./funcionais_pendentes.json";
 const LIMITE_PARTE_BI = 1500;
+
+const CERTIFICADO_BASE = "./CERTIFICADO.png";
+
+const CANAL_FUNCIONAL = "1484826121697628221";
+const CANAL_LOG_FUNCIONAL = "1484826214915899412";
+const CARGO_VUNESP = "1484825992739553321";
 
 const CARGO_PM = "1484825990231359540";
 const CURSO_FORMACAO_SOLDADO = "1484825934090600478";
@@ -62,66 +70,18 @@ const QOPM_SUBALTERNOS = "1484825761327222876";
 const QOPM_INTERMEDIARIOS = "1484825759280402573";
 const QOPM_SUPERIORES = "1484825754725257368";
 
-const LOG_ESCOLA = "1519678412208476250";
-const LOG_DIRETORIA = "1519678923934400630";
+const LOG_ESCOLA_FORMACAO = "1519678412208476250";
+const LOG_DIRETORIA_ENSINO = "1519678923934400630";
 
-const CERTIFICADOS_ESCOLA = "1519679423383732254";
 const CERTIFICADOS_DIRETORIA = "1519680856145268836";
+const CERTIFICADOS_ESCOLA = "1519679423383732254";
 
 const CANAIS_CURSO = {
-  "1484826114177110066": LOG_DIRETORIA,
-  "1484826115502641162": LOG_DIRETORIA,
-  "1484826117453119489": LOG_DIRETORIA,
-  "1484826124688298054": LOG_ESCOLA
+  "1484826114177110066": LOG_DIRETORIA_ENSINO,
+  "1484826115502641162": LOG_DIRETORIA_ENSINO,
+  "1484826117453119489": LOG_DIRETORIA_ENSINO,
+  "1484826124688298054": LOG_ESCOLA_FORMACAO
 };
-
-function cargosAutomaticosPorPatente(patente) {
-  let cargos = [CARGO_PM];
-
-  if (["sd1", "sd2", "cabo"].includes(patente)) {
-    cargos.push(CURSO_FORMACAO_SOLDADO);
-    cargos.push(QPPM_PRACAS);
-  }
-
-  if (["3sgt", "2sgt", "1sgt"].includes(patente)) {
-    cargos.push(CURSO_FORMACAO_SOLDADO);
-    cargos.push(CURSO_FORMACAO_SARGENTOS);
-    cargos.push(QPPM_PRACAS_GRADUADOS);
-  }
-
-  if (["subtenente", "aspirante"].includes(patente)) {
-    cargos.push(CURSO_FORMACAO_SOLDADO);
-    cargos.push(CURSO_FORMACAO_SARGENTOS);
-    cargos.push(CURSO_FORMACAO_OFICIAL);
-    cargos.push(QPES_PRACAS_ESPECIAIS);
-  }
-
-  if (["2tenente", "1tenente"].includes(patente)) {
-    cargos.push(CURSO_FORMACAO_SOLDADO);
-    cargos.push(CURSO_FORMACAO_SARGENTOS);
-    cargos.push(CURSO_FORMACAO_OFICIAL);
-    cargos.push(QOPM_SUBALTERNOS);
-  }
-
-  if (["capitao"].includes(patente)) {
-    cargos.push(CURSO_FORMACAO_SOLDADO);
-    cargos.push(CURSO_FORMACAO_SARGENTOS);
-    cargos.push(CURSO_FORMACAO_OFICIAL);
-    cargos.push(QOPM_INTERMEDIARIOS);
-  }
-
-  if (["major", "tenente_coronel", "coronel"].includes(patente)) {
-    cargos.push(CURSO_FORMACAO_SOLDADO);
-    cargos.push(CURSO_FORMACAO_SARGENTOS);
-    cargos.push(CURSO_FORMACAO_OFICIAL);
-    cargos.push(QOPM_SUPERIORES);
-  }
-
-  return cargos;
-}
-const CANAL_FUNCIONAL = "1484826121697628221";
-const CANAL_LOG_FUNCIONAL = "1484826214915899412";
-const CARGO_VUNESP = "1484825992739553321";
 
 const CATEGORIA_TICKETS = "1484826023794184263";
 const CANAL_LOG_TICKETS = "1484826220905627698";
@@ -132,6 +92,9 @@ const CANAL_AUSENCIAS_LOG = "1509158714526138558";
 const CARGO_AUSENCIA_JUSTIFICADA = "1509157689832505435";
 const CARGO_P1HR = "1484825834333143173";
 
+const TICKET_BANNER_URL =
+  "https://cdn.discordapp.com/attachments/1402409732307685446/1508603952944513034/Logo_ssp_litoral.png";
+
 const LOG_ENTRADAS = "1484826127531773974";
 const LOG_SAIDAS = "1484826130249810104";
 const LOG_MENSAGENS = "1484826139410173952";
@@ -139,10 +102,6 @@ const LOG_EXONERACOES = "1484826148847489054";
 const LOG_CONVITES = "1484826154039771217";
 
 const CANAL_LOG_PONTOS_GERAL = "1484826135178248222";
-
-const TICKET_BANNER_URL =
-  "https://cdn.discordapp.com/attachments/1402409732307685446/1508603952944513034/Logo_ssp_litoral.png";
-
 const CARGOS_TICKET = [
   "1484825744390754407",
   "1484825745313370112",
@@ -247,6 +206,7 @@ const nomesBI = {
   humaita: "Humaitá",
   "4bpchoque": "4º BPChoque"
 };
+
 const hierarquias = {
   coronel: {
     nome: "Coronel PM",
@@ -368,7 +328,6 @@ const hierarquias = {
     cargo: "1510744042118578196"
   }
 };
-
 const unidades = {
   qcg: {
     nome: "QCG",
@@ -544,21 +503,81 @@ const cursos = {
     cargo: "1489652487106596914"
   }
 };
+
+function cargosAutomaticosPorPatente(patenteKey) {
+  const cargos = [CARGO_PM];
+
+  if (["sd1", "sd2", "cabo"].includes(patenteKey)) {
+    cargos.push(CURSO_FORMACAO_SOLDADO);
+    cargos.push(QPPM_PRACAS);
+  }
+
+  if (["3sgt", "2sgt", "1sgt"].includes(patenteKey)) {
+    cargos.push(CURSO_FORMACAO_SOLDADO);
+    cargos.push(CURSO_FORMACAO_SARGENTOS);
+    cargos.push(QPPM_PRACAS_GRADUADOS);
+  }
+
+  if (["subtenente", "aspirante"].includes(patenteKey)) {
+    cargos.push(CURSO_FORMACAO_SOLDADO);
+    cargos.push(CURSO_FORMACAO_SARGENTOS);
+    cargos.push(CURSO_FORMACAO_OFICIAL);
+    cargos.push(QPES_PRACAS_ESPECIAIS);
+  }
+
+  if (["2tenente", "1tenente"].includes(patenteKey)) {
+    cargos.push(CURSO_FORMACAO_SOLDADO);
+    cargos.push(CURSO_FORMACAO_SARGENTOS);
+    cargos.push(CURSO_FORMACAO_OFICIAL);
+    cargos.push(QOPM_SUBALTERNOS);
+  }
+
+  if (["capitao"].includes(patenteKey)) {
+    cargos.push(CURSO_FORMACAO_SOLDADO);
+    cargos.push(CURSO_FORMACAO_SARGENTOS);
+    cargos.push(CURSO_FORMACAO_OFICIAL);
+    cargos.push(QOPM_INTERMEDIARIOS);
+  }
+
+  if (["major", "tenente_coronel", "coronel"].includes(patenteKey)) {
+    cargos.push(CURSO_FORMACAO_SOLDADO);
+    cargos.push(CURSO_FORMACAO_SARGENTOS);
+    cargos.push(CURSO_FORMACAO_OFICIAL);
+    cargos.push(QOPM_SUPERIORES);
+  }
+
+  return cargos;
+}
+
+function todosCargosAutomaticosFuncional() {
+  return [
+    CARGO_PM,
+    CURSO_FORMACAO_SOLDADO,
+    CURSO_FORMACAO_SARGENTOS,
+    CURSO_FORMACAO_OFICIAL,
+    QPPM_PRACAS,
+    QPPM_PRACAS_GRADUADOS,
+    QPES_PRACAS_ESPECIAIS,
+    QOPM_SUBALTERNOS,
+    QOPM_INTERMEDIARIOS,
+    QOPM_SUPERIORES
+  ];
+}
 function salvarFuncionaisPendentes() {
   const dados = Array.from(pendentes.entries());
 
   fs.writeFileSync(
-    "./funcionais_pendentes.json",
+    ARQUIVO_FUNCIONAIS_PENDENTES,
     JSON.stringify(dados, null, 2),
     "utf-8"
   );
 }
 
 function carregarFuncionaisPendentes() {
-  if (!fs.existsSync("./funcionais_pendentes.json")) return;
+  if (!fs.existsSync(ARQUIVO_FUNCIONAIS_PENDENTES)) return;
 
   try {
-    const conteudo = fs.readFileSync("./funcionais_pendentes.json", "utf-8");
+    const conteudo = fs.readFileSync(ARQUIVO_FUNCIONAIS_PENDENTES, "utf-8");
     const dados = JSON.parse(conteudo);
 
     pendentes.clear();
@@ -588,6 +607,7 @@ async function recusarFuncionalExpirada(userId) {
     await membro.roles.remove(todosCargosHierarquia).catch(() => {});
     await membro.roles.remove(todosCargosUnidade).catch(() => {});
     await membro.roles.remove(todosCargosCursos).catch(() => {});
+    await membro.roles.remove(todosCargosAutomaticosFuncional()).catch(() => {});
     await membro.roles.add(CARGO_VUNESP).catch(() => {});
 
     await membro.send({
@@ -605,13 +625,13 @@ async function recusarFuncionalExpirada(userId) {
 
       const expiradoEmbed = embedAntigo
         ? EmbedBuilder.from(embedAntigo)
-          .setColor("#FF0000")
-          .setFooter({ text: "Funcional recusada automaticamente por expiração de 12 horas" })
+            .setColor("#FF0000")
+            .setFooter({ text: "Funcional recusada automaticamente por expiração de 12 horas" })
         : new EmbedBuilder()
-          .setColor("#FF0000")
-          .setTitle("⏰ Funcional Expirada")
-          .setDescription(`<@${userId}> teve a funcional recusada automaticamente por expiração.`)
-          .setTimestamp();
+            .setColor("#FF0000")
+            .setTitle("⏰ Funcional Expirada")
+            .setDescription(`<@${userId}> teve a funcional recusada automaticamente por expiração.`)
+            .setTimestamp();
 
       await mensagem.edit({
         content: "⏰ Funcional expirada e recusada automaticamente.",
@@ -700,37 +720,61 @@ Secretaria da Segurança Pública - Polícia Militar • ${data} ${hora}h`;
 
 function botoesBI() {
   const linha1 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId("bi_parte1").setLabel("1ª Parte").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("bi_parte2").setLabel("2ª Parte").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("bi_parte3").setLabel("3ª Parte").setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId("bi_parte4").setLabel("4ª Parte").setStyle(ButtonStyle.Primary)
+    new ButtonBuilder()
+      .setCustomId("bi_parte1")
+      .setLabel("1ª Parte")
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId("bi_parte2")
+      .setLabel("2ª Parte")
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId("bi_parte3")
+      .setLabel("3ª Parte")
+      .setStyle(ButtonStyle.Primary),
+
+    new ButtonBuilder()
+      .setCustomId("bi_parte4")
+      .setLabel("4ª Parte")
+      .setStyle(ButtonStyle.Primary)
   );
 
   const linha2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId("preview_bi").setLabel("Pré-visualizar").setEmoji("👁️").setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId("publicar_bi").setLabel("Publicar").setEmoji("✅").setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId("cancelar_bi").setLabel("Cancelar").setEmoji("❌").setStyle(ButtonStyle.Danger)
+    new ButtonBuilder()
+      .setCustomId("preview_bi")
+      .setLabel("Pré-visualizar")
+      .setEmoji("👁️")
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId("publicar_bi")
+      .setLabel("Publicar")
+      .setEmoji("✅")
+      .setStyle(ButtonStyle.Success),
+
+    new ButtonBuilder()
+      .setCustomId("cancelar_bi")
+      .setLabel("Cancelar")
+      .setEmoji("❌")
+      .setStyle(ButtonStyle.Danger)
   );
 
   return [linha1, linha2];
 }
-
 async function gerarCertificadoImagem({ nome, rg, curso }) {
-  const modeloPath = path.join(__dirname, "CERTIFICADO.png");
-
-  if (!fs.existsSync(modeloPath)) {
+  if (!fs.existsSync(CERTIFICADO_BASE)) {
     throw new Error("Arquivo CERTIFICADO.png não encontrado na raiz do bot.");
   }
 
-  const image = await Jimp.read(modeloPath);
+  const imagem = await Jimp.read(CERTIFICADO_BASE);
 
   const fonteNome = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
   const fonteCurso = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
   const fonteRg = await Jimp.loadFont(Jimp.FONT_SANS_24_BLACK);
 
-  const largura = image.bitmap.width;
-
-  image.print(
+  imagem.print(
     fonteNome,
     515,
     385,
@@ -742,7 +786,7 @@ async function gerarCertificadoImagem({ nome, rg, curso }) {
     45
   );
 
-  image.print(
+  imagem.print(
     fonteRg,
     1005,
     390,
@@ -750,11 +794,11 @@ async function gerarCertificadoImagem({ nome, rg, curso }) {
       text: rg,
       alignmentX: Jimp.HORIZONTAL_ALIGN_LEFT
     },
-    210,
+    220,
     35
   );
 
-  image.print(
+  imagem.print(
     fonteCurso,
     345,
     455,
@@ -766,12 +810,13 @@ async function gerarCertificadoImagem({ nome, rg, curso }) {
     45
   );
 
-  const outputPath = path.join(__dirname, `certificado_${Date.now()}.png`);
+  const saida = `./certificado_${Date.now()}.png`;
 
-  await image.writeAsync(outputPath);
+  await imagem.writeAsync(saida);
 
-  return outputPath;
+  return saida;
 }
+
 client.once("ready", async () => {
   console.log(`✅ Bot online como ${client.user.tag}`);
 
@@ -808,7 +853,6 @@ client.once("ready", async () => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
-
     if (
       interaction.isChatInputCommand() &&
       interaction.commandName === "certificado"
@@ -847,6 +891,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
     ) {
       const dados = certificados.get(interaction.user.id);
 
+      if (!dados) {
+        return interaction.reply({
+          content: "❌ Certificado não encontrado. Use /certificado novamente.",
+          ephemeral: true
+        });
+      }
+
       dados.origem = interaction.values[0];
 
       certificados.set(interaction.user.id, dados);
@@ -883,6 +934,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
     ) {
       const dados = certificados.get(interaction.user.id);
 
+      if (!dados) {
+        return interaction.reply({
+          content: "❌ Certificado não encontrado. Use /certificado novamente.",
+          ephemeral: true
+        });
+      }
+
       const alunoBruto = interaction.fields.getTextInputValue("aluno");
       const alunoId = alunoBruto.replace(/\D/g, "");
       const rg = interaction.fields.getTextInputValue("rg");
@@ -908,12 +966,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ephemeral: true
       });
     }
-
     if (
       interaction.isStringSelectMenu() &&
       interaction.customId === "cert_curso"
     ) {
       const dados = certificados.get(interaction.user.id);
+
+      if (!dados) {
+        return interaction.reply({
+          content: "❌ Certificado não encontrado. Use /certificado novamente.",
+          ephemeral: true
+        });
+      }
 
       dados.cursoKey = interaction.values[0];
 
@@ -940,7 +1004,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
           `🆔 RE/RG: **${dados.rg}**\n` +
           `📚 Curso: **${curso.nome}**\n` +
           `🏫 Publicação: **${dados.origem === "escola" ? "Escola de Formação" : "Diretoria de Ensino"}**`,
-        components: [new ActionRowBuilder().addComponents(confirmar, cancelar)]
+        components: [
+          new ActionRowBuilder().addComponents(confirmar, cancelar)
+        ]
       });
     }
 
@@ -1027,6 +1093,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: []
       });
     }
+
     if (
       interaction.isChatInputCommand() &&
       interaction.commandName === "boletim"
@@ -1084,7 +1151,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: botoesBI()
       });
     }
-
     if (
       interaction.isButton() &&
       ["bi_parte1", "bi_parte2", "bi_parte3", "bi_parte4"].includes(interaction.customId)
@@ -1149,7 +1215,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      const texto = limitarTexto(interaction.fields.getTextInputValue("texto") || "");
+      const texto = limitarTexto(
+        interaction.fields.getTextInputValue("texto") || ""
+      );
 
       if (interaction.customId === "modal_bi_parte1") {
         dados.numero = interaction.fields.getTextInputValue("numero") || "___";
@@ -1163,7 +1231,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       boletins.set(interaction.user.id, dados);
 
       return interaction.reply({
-        content: `✅ Parte salva com sucesso. Limite: ${LIMITE_PARTE_BI} caracteres por parte.`,
+        content: "✅ Parte salva com sucesso.",
         ephemeral: true
       });
     }
@@ -1181,25 +1249,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      const textoBI = montarTextoBI(dados);
-      const tamanhos = tamanhoPartesBI(dados);
-
-      if (textoBI.length > 1900) {
-        return interaction.reply({
-          content:
-            "👁️ Prévia grande demais para uma única mensagem do Discord.\n\n" +
-            `📏 Limite por parte: ${LIMITE_PARTE_BI} caracteres.\n` +
-            `1ª Parte: ${tamanhos.parte1}/${LIMITE_PARTE_BI}\n` +
-            `2ª Parte: ${tamanhos.parte2}/${LIMITE_PARTE_BI}\n` +
-            `3ª Parte: ${tamanhos.parte3}/${LIMITE_PARTE_BI}\n` +
-            `4ª Parte: ${tamanhos.parte4}/${LIMITE_PARTE_BI}\n\n` +
-            "✅ Na publicação, o bot enviará o boletim em mensagens separadas.",
-          ephemeral: true
-        });
-      }
-
       return interaction.reply({
-        content: textoBI,
+        content: montarTextoBI(dados),
         ephemeral: true
       });
     }
@@ -1240,63 +1291,33 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
-      const textoBI = montarTextoBI(dados);
+      const partes = [
+        `# BOLETIM GERAL - POLÍCIA MILITAR DO ESTADO DE SÃO PAULO`,
+        `📁 | 1º PARTE SERVIÇOS DIÁRIOS:\n${dados.parte1 || "Sem alterações."}`,
+        `📁 | 2º PARTE INSTRUÇÃO E OPERAÇÕES POLICIAIS MILITARES:\n${dados.parte2 || "Sem alterações."}`,
+        `📁 | 3º PARTE ASSUNTOS GERAIS E ADMINISTRATIVOS:\n${dados.parte3 || "Sem alterações."}`,
+        `📁 | 4º PARTE JUSTIÇA E DISCIPLINA:\n${dados.parte4 || "Sem alterações."}`
+      ];
 
-      if (textoBI.length <= 1900) {
-        await canal.send({ content: textoBI });
-      } else {
-        const agora = new Date();
-
-        const data = agora.toLocaleDateString("pt-BR", {
-          timeZone: "America/Sao_Paulo"
-        });
-
-        const hora = agora.toLocaleTimeString("pt-BR", {
-          timeZone: "America/Sao_Paulo",
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-
-        await canal.send({
-          content:
-            `# BOLETIM GERAL - POLÍCIA MILITAR DO ESTADO DE SÃO PAULO\n\n` +
-            `**Unidade:** ${nomesBI[dados.unidade] || "Não informada"}\n` +
-            `BOLETIM GERAL Nº ${dados.numero || "___"}/2026`
-        });
-
-        await canal.send({
-          content: `📁 | **1º PARTE SERVIÇOS DIÁRIOS:**\n${dados.parte1 || "Sem alterações."}`
-        });
-
-        await canal.send({
-          content: `📁 | **2º PARTE INSTRUÇÃO E OPERAÇÕES POLICIAIS MILITARES:**\n${dados.parte2 || "Sem alterações."}`
-        });
-
-        await canal.send({
-          content: `📁 | **3º PARTE ASSUNTOS GERAIS E ADMINISTRATIVOS:**\n${dados.parte3 || "Sem alterações."}`
-        });
-
-        await canal.send({
-          content:
-            `📁 | **4º PARTE JUSTIÇA E DISCIPLINA:**\n${dados.parte4 || "Sem alterações."}\n\n` +
-            `Secretaria da Segurança Pública - Polícia Militar • ${data} ${hora}h`
-        });
+      for (const parte of partes) {
+        await canal.send({ content: parte }).catch(() => {});
       }
 
       boletins.delete(interaction.user.id);
 
       return interaction.update({
-        content: `✅ Boletim publicado em ${nomesBI[dados.unidade]}.`,
+        content: "✅ Boletim publicado com sucesso.",
         components: []
       });
     }
+
     if (
       interaction.isChatInputCommand() &&
       interaction.commandName === "painel-funcional"
     ) {
       const embed = new EmbedBuilder()
         .setTitle("🪪 Solicitação de Funcional")
-        .setDescription("Clique no botão abaixo para solicitar sua funcional.")
+        .setDescription("Clique abaixo para solicitar sua funcional.")
         .setColor("#87CEEB");
 
       const botao = new ButtonBuilder()
@@ -1310,33 +1331,38 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: [new ActionRowBuilder().addComponents(botao)]
       });
     }
-
-    if (interaction.isButton() && interaction.customId === "abrir_funcional") {
+    if (
+      interaction.isButton() &&
+      interaction.customId === "abrir_funcional"
+    ) {
       const modal = new ModalBuilder()
         .setCustomId("modal_funcional")
         .setTitle("Solicitação de Funcional");
 
+      const nomeInput = new TextInputBuilder()
+        .setCustomId("nome")
+        .setLabel("Nome completo")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const rgInput = new TextInputBuilder()
+        .setCustomId("rg")
+        .setLabel("RG/Passaporte")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
       modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("nome")
-            .setLabel("Nome completo")
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("rg")
-            .setLabel("RG/Passaporte")
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-        )
+        new ActionRowBuilder().addComponents(nomeInput),
+        new ActionRowBuilder().addComponents(rgInput)
       );
 
       return interaction.showModal(modal);
     }
 
-    if (interaction.isModalSubmit() && interaction.customId === "modal_funcional") {
+    if (
+      interaction.isModalSubmit() &&
+      interaction.customId === "modal_funcional"
+    ) {
       const nome = interaction.fields.getTextInputValue("nome");
       const rg = interaction.fields.getTextInputValue("rg");
 
@@ -1359,8 +1385,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
       });
     }
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_patente") {
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_patente"
+    ) {
       const sessao = sessoes.get(interaction.user.id);
+
+      if (!sessao) {
+        return interaction.reply({
+          content: "❌ Sessão expirada. Abra a funcional novamente.",
+          ephemeral: true
+        });
+      }
 
       sessao.patente = interaction.values[0];
       sessoes.set(interaction.user.id, sessao);
@@ -1381,8 +1417,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
       });
     }
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_unidade") {
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_unidade"
+    ) {
       const sessao = sessoes.get(interaction.user.id);
+
+      if (!sessao) {
+        return interaction.reply({
+          content: "❌ Sessão expirada. Abra a funcional novamente.",
+          ephemeral: true
+        });
+      }
 
       sessao.unidade = interaction.values[0];
       sessoes.set(interaction.user.id, sessao);
@@ -1405,8 +1451,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
       });
     }
 
-    if (interaction.isStringSelectMenu() && interaction.customId === "selecionar_cursos") {
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_cursos"
+    ) {
       const sessao = sessoes.get(interaction.user.id);
+
+      if (!sessao) {
+        return interaction.reply({
+          content: "❌ Sessão expirada. Abra a funcional novamente.",
+          ephemeral: true
+        });
+      }
 
       sessao.cursos = interaction.values;
 
@@ -1485,7 +1541,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
       }
 
+      if (!canalLog) {
+        salvarFuncionaisPendentes();
+        agendarExpiracaoFuncional(interaction.user.id);
+      }
+
       sessoes.delete(interaction.user.id);
+
+      await interaction.user.send({
+        content: "📨 Sua funcional foi enviada para análise. Ela ficará disponível por 12 horas."
+      }).catch(() => {});
 
       return interaction.update({
         content: "✅ Solicitação enviada com sucesso.",
@@ -1532,29 +1597,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       const todosCargosHierarquia = Object.values(hierarquias).map(x => x.cargo);
       const todosCargosUnidade = Object.values(unidades).map(x => x.cargo);
-      const todosCargosAutomaticos = [
-        CARGO_PM,
-        CURSO_FORMACAO_SOLDADO,
-        CURSO_FORMACAO_SARGENTOS,
-        CURSO_FORMACAO_OFICIAL,
-        QPPM_PRACAS,
-        QPPM_PRACAS_GRADUADOS,
-        QPES_PRACAS_ESPECIAIS,
-        QOPM_SUBALTERNOS,
-        QOPM_INTERMEDIARIOS,
-        QOPM_SUPERIORES
-      ];
 
       await membro.roles.remove(todosCargosHierarquia).catch(() => {});
       await membro.roles.remove(todosCargosUnidade).catch(() => {});
-      await membro.roles.remove(todosCargosAutomaticos).catch(() => {});
+      await membro.roles.remove(todosCargosAutomaticosFuncional()).catch(() => {});
       await membro.roles.remove(CARGO_VUNESP).catch(() => {});
 
       await membro.roles.add(patente.cargo).catch(() => {});
       await membro.roles.add(unidade.cargo).catch(() => {});
 
-      for (const cargoId of cargosAutomaticosPorPatente(dados.patenteKey)) {
-        await membro.roles.add(cargoId).catch(() => {});
+      for (const cargoAuto of cargosAutomaticosPorPatente(dados.patenteKey)) {
+        await membro.roles.add(cargoAuto).catch(() => {});
       }
 
       for (const cursoKey of dados.cursosKeys) {
@@ -1562,7 +1615,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
 
       await membro.setNickname(dados.novoNick).catch(() => {});
-      await membro.send({ content: "✅ Sua funcional foi aprovada." }).catch(() => {});
+
+      await membro.send({
+        content: "✅ Sua funcional foi aprovada."
+      }).catch(() => {});
 
       pendentes.delete(userId);
       salvarFuncionaisPendentes();
@@ -1577,7 +1633,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         components: []
       });
     }
-
     if (
       interaction.isButton() &&
       interaction.customId.startsWith("negar_funcional_")
@@ -1594,6 +1649,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       }
 
+      if (dados.expiresAt && Date.now() > dados.expiresAt) {
+        await recusarFuncionalExpirada(userId);
+
+        return interaction.followUp({
+          content: "⏰ Esta funcional expirou após 12 horas e foi recusada automaticamente.",
+          ephemeral: true
+        });
+      }
+
       const membro = await interaction.guild.members.fetch(userId).catch(() => null);
 
       if (membro) {
@@ -1604,8 +1668,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await membro.roles.remove(todosCargosHierarquia).catch(() => {});
         await membro.roles.remove(todosCargosUnidade).catch(() => {});
         await membro.roles.remove(todosCargosCursos).catch(() => {});
+        await membro.roles.remove(todosCargosAutomaticosFuncional()).catch(() => {});
         await membro.roles.add(CARGO_VUNESP).catch(() => {});
-        await membro.send({ content: "❌ Sua funcional foi negada." }).catch(() => {});
+
+        await membro.send({
+          content: "❌ Sua funcional foi negada."
+        }).catch(() => {});
       }
 
       pendentes.delete(userId);
@@ -1617,6 +1685,508 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       return interaction.message.edit({
         content: "❌ Funcional negada.",
+        embeds: [negadoEmbed],
+        components: []
+      });
+    }
+
+    if (
+      interaction.isChatInputCommand() &&
+      interaction.commandName === "painel-ticket"
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor("#ff7a00")
+        .setTitle("P1 - RECURSOS HUMANOS")
+        .setDescription(
+          "🚨 P1 - RECURSOS HUMANOS | SSP LITORAL PAULISTA 🚨\n\n" +
+          "Selecione abaixo o tipo de atendimento desejado."
+        )
+        .setImage(TICKET_BANNER_URL);
+
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId("selecionar_ticket")
+        .setPlaceholder("Escolha uma opção...")
+        .addOptions(
+          Object.entries(TIPOS_TICKET).map(([value, item]) => ({
+            label: item.nome,
+            description: item.descricao,
+            emoji: item.emoji,
+            value
+          }))
+        );
+
+      return interaction.reply({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(menu)]
+      });
+    }
+
+    if (
+      interaction.isStringSelectMenu() &&
+      interaction.customId === "selecionar_ticket"
+    ) {
+      const tipo = interaction.values[0];
+      const dadosTipo = TIPOS_TICKET[tipo];
+
+      const modal = new ModalBuilder()
+        .setCustomId(`modal_ticket_${tipo}`)
+        .setTitle(`Atendimento - ${dadosTipo.nome}`);
+
+      const nomeInput = new TextInputBuilder()
+        .setCustomId("nome")
+        .setLabel("Nome completo")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const rgInput = new TextInputBuilder()
+        .setCustomId("rg")
+        .setLabel("RG/Passaporte")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const batalhaoInput = new TextInputBuilder()
+        .setCustomId("batalhao")
+        .setLabel("Batalhão/Unidade")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const relatoInput = new TextInputBuilder()
+        .setCustomId("relato")
+        .setLabel("Relate sua solicitação")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(nomeInput),
+        new ActionRowBuilder().addComponents(rgInput),
+        new ActionRowBuilder().addComponents(batalhaoInput),
+        new ActionRowBuilder().addComponents(relatoInput)
+      );
+
+      return interaction.showModal(modal);
+    }
+
+    if (
+      interaction.isModalSubmit() &&
+      interaction.customId.startsWith("modal_ticket_")
+    ) {
+      const tipo = interaction.customId.replace("modal_ticket_", "");
+      const dadosTipo = TIPOS_TICKET[tipo];
+
+      const nome = interaction.fields.getTextInputValue("nome");
+      const rg = interaction.fields.getTextInputValue("rg");
+      const batalhao = interaction.fields.getTextInputValue("batalhao");
+      const relato = interaction.fields.getTextInputValue("relato");
+
+      const nomeCanal =
+        `ticket-${interaction.user.username}`
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, "-")
+          .slice(0, 90);
+
+      const overwrites = [
+        {
+          id: interaction.guild.roles.everyone.id,
+          deny: [PermissionsBitField.Flags.ViewChannel]
+        },
+        {
+          id: interaction.user.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory
+          ]
+        },
+        ...CARGOS_TICKET
+          .filter(cargoId => interaction.guild.roles.cache.has(cargoId))
+          .map(cargoId => ({
+            id: cargoId,
+            allow: [
+              PermissionsBitField.Flags.ViewChannel,
+              PermissionsBitField.Flags.SendMessages,
+              PermissionsBitField.Flags.ReadMessageHistory
+            ]
+          }))
+      ];
+
+      const canalTicket = await interaction.guild.channels.create({
+        name: nomeCanal,
+        type: ChannelType.GuildText,
+        parent: CATEGORIA_TICKETS,
+        permissionOverwrites: overwrites
+      });
+
+      const embedTicket = new EmbedBuilder()
+        .setColor("#ff7a00")
+        .setTitle(`${dadosTipo.emoji} Atendimento Aberto`)
+        .addFields(
+          { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
+          { name: "🪪 Nome", value: nome, inline: true },
+          { name: "🆔 RG", value: rg, inline: true },
+          { name: "🏢 Unidade", value: batalhao, inline: true },
+          { name: "📝 Relato", value: relato.slice(0, 1000) }
+        )
+        .setTimestamp();
+
+      const fechar = new ButtonBuilder()
+        .setCustomId("fechar_ticket")
+        .setLabel("Fechar Ticket")
+        .setEmoji("🔒")
+        .setStyle(ButtonStyle.Danger);
+
+      await canalTicket.send({
+        content: `${interaction.user} atendimento aberto.`,
+        embeds: [embedTicket],
+        components: [new ActionRowBuilder().addComponents(fechar)]
+      });
+
+      const canalLog = await interaction.guild.channels
+        .fetch(CANAL_LOG_TICKETS)
+        .catch(() => null);
+
+      if (canalLog) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#00FF7F")
+          .setTitle("🎫 Ticket Aberto")
+          .addFields(
+            { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
+            { name: "📌 Categoria", value: dadosTipo.nome, inline: true },
+            { name: "📍 Canal", value: `${canalTicket}`, inline: true }
+          )
+          .setTimestamp();
+
+        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+      }
+
+      return interaction.reply({
+        content: `✅ Ticket criado em ${canalTicket}.`,
+        ephemeral: true
+      });
+    }
+    if (
+      interaction.isButton() &&
+      interaction.customId === "fechar_ticket"
+    ) {
+      const canalLog = await interaction.guild.channels
+        .fetch(CANAL_LOG_TICKETS)
+        .catch(() => null);
+
+      const mensagens = await interaction.channel.messages
+        .fetch({ limit: 100 })
+        .catch(() => null);
+
+      let transcript = "TRANSCRIPT DO TICKET\n\n";
+      let donoTicket = null;
+
+      if (mensagens) {
+        const mensagensOrdenadas = mensagens.sort(
+          (a, b) => a.createdTimestamp - b.createdTimestamp
+        );
+
+        for (const msg of mensagensOrdenadas.values()) {
+          const data = new Date(msg.createdTimestamp).toLocaleString("pt-BR");
+
+          transcript += `[${data}] ${msg.author.tag}: ${msg.content || "[Sem texto]"}\n`;
+
+          if (!donoTicket) {
+            donoTicket = await interaction.guild.members
+              .fetch(msg.author.id)
+              .catch(() => null);
+          }
+        }
+      }
+
+      const buffer = Buffer.from(transcript, "utf-8");
+
+      if (canalLog) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#FF0000")
+          .setTitle("🔒 Ticket Fechado")
+          .addFields(
+            { name: "📍 Canal", value: interaction.channel.name, inline: true },
+            { name: "👮 Fechado por", value: `${interaction.user}`, inline: true }
+          )
+          .setTimestamp();
+
+        await canalLog.send({
+          embeds: [logEmbed],
+          files: [
+            {
+              attachment: buffer,
+              name: `transcript-${interaction.channel.name}.txt`
+            }
+          ]
+        }).catch(() => {});
+      }
+
+      if (donoTicket) {
+        await donoTicket.send({
+          content: "📄 Seu ticket foi encerrado.",
+          files: [
+            {
+              attachment: buffer,
+              name: `transcript-${interaction.channel.name}.txt`
+            }
+          ]
+        }).catch(() => {});
+      }
+
+      await interaction.reply({
+        content: "🔒 Ticket fechado. Canal será apagado em 5 segundos."
+      });
+
+      setTimeout(() => {
+        interaction.channel.delete().catch(() => {});
+      }, 5000);
+    }
+
+    if (
+      interaction.isChatInputCommand() &&
+      interaction.commandName === "painel-ausencia"
+    ) {
+      const embed = new EmbedBuilder()
+        .setColor("#ff7a00")
+        .setTitle("📋 Justificativa de Ausência")
+        .setDescription(
+          "Utilize este painel para justificar sua ausência junto ao setor de P1/RH.\n\n" +
+          "Clique no botão abaixo e preencha corretamente:\n" +
+          "• Nome\n" +
+          "• Posto/Graduação\n" +
+          "• Batalhão/Unidade\n" +
+          "• Motivo da ausência\n\n" +
+          "⚠️ O pedido será analisado pelo setor responsável."
+        );
+
+      const botao = new ButtonBuilder()
+        .setCustomId("abrir_ausencia")
+        .setLabel("Justificar Ausência")
+        .setEmoji("📋")
+        .setStyle(ButtonStyle.Primary);
+
+      return interaction.reply({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(botao)]
+      });
+    }
+
+    if (
+      interaction.isButton() &&
+      interaction.customId === "abrir_ausencia"
+    ) {
+      const modal = new ModalBuilder()
+        .setCustomId("modal_ausencia")
+        .setTitle("Justificativa de Ausência");
+
+      const nomeInput = new TextInputBuilder()
+        .setCustomId("nome")
+        .setLabel("Nome")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const graduacaoInput = new TextInputBuilder()
+        .setCustomId("graduacao")
+        .setLabel("Posto/Graduação")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const batalhaoInput = new TextInputBuilder()
+        .setCustomId("batalhao")
+        .setLabel("Batalhão/Unidade")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+      const motivoInput = new TextInputBuilder()
+        .setCustomId("motivo")
+        .setLabel("Motivo")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(nomeInput),
+        new ActionRowBuilder().addComponents(graduacaoInput),
+        new ActionRowBuilder().addComponents(batalhaoInput),
+        new ActionRowBuilder().addComponents(motivoInput)
+      );
+
+      return interaction.showModal(modal);
+    }
+
+    if (
+      interaction.isModalSubmit() &&
+      interaction.customId === "modal_ausencia"
+    ) {
+      const nome = interaction.fields.getTextInputValue("nome");
+      const graduacao = interaction.fields.getTextInputValue("graduacao");
+      const batalhao = interaction.fields.getTextInputValue("batalhao");
+      const motivo = interaction.fields.getTextInputValue("motivo");
+
+      ausenciasPendentes.set(interaction.user.id, {
+        userId: interaction.user.id,
+        nome,
+        graduacao,
+        batalhao,
+        motivo
+      });
+
+      const embed = new EmbedBuilder()
+        .setColor("#FFD700")
+        .setTitle("📋 Nova Justificativa de Ausência")
+        .addFields(
+          { name: "👤 Solicitante", value: `${interaction.user}`, inline: true },
+          { name: "🪪 Nome", value: nome, inline: true },
+          { name: "🎖️ Posto/Graduação", value: graduacao, inline: true },
+          { name: "🏢 Batalhão/Unidade", value: batalhao, inline: true },
+          { name: "📝 Motivo", value: motivo.slice(0, 1000) }
+        )
+        .setTimestamp();
+
+      const aprovar = new ButtonBuilder()
+        .setCustomId(`aprovar_ausencia_${interaction.user.id}`)
+        .setLabel("Aprovar Ausência")
+        .setEmoji("✅")
+        .setStyle(ButtonStyle.Success);
+
+      const negar = new ButtonBuilder()
+        .setCustomId(`negar_ausencia_${interaction.user.id}`)
+        .setLabel("Negar Ausência")
+        .setEmoji("❌")
+        .setStyle(ButtonStyle.Danger);
+
+      const canalAnalise = await interaction.guild.channels
+        .fetch(CANAL_AUSENCIAS_ANALISE)
+        .catch(() => null);
+
+      if (canalAnalise) {
+        await canalAnalise.send({
+          content: `<@&${CARGO_P1HR}> nova justificativa de ausência para análise.`,
+          embeds: [embed],
+          components: [new ActionRowBuilder().addComponents(aprovar, negar)]
+        });
+      }
+
+      return interaction.reply({
+        content: "✅ Sua justificativa de ausência foi enviada para análise do P1/RH.",
+        ephemeral: true
+      });
+    }
+
+    if (
+      interaction.isButton() &&
+      interaction.customId.startsWith("aprovar_ausencia_")
+    ) {
+      await interaction.deferUpdate();
+
+      if (
+        !interaction.member.roles.cache.has(CARGO_P1HR) &&
+        !interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)
+      ) {
+        return interaction.followUp({
+          content: "❌ Apenas P1-HR pode aprovar justificativas de ausência.",
+          ephemeral: true
+        });
+      }
+
+      const userId = interaction.customId.replace("aprovar_ausencia_", "");
+      const dados = ausenciasPendentes.get(userId);
+
+      if (!dados) {
+        return interaction.followUp({
+          content: "❌ Solicitação de ausência não encontrada ou o bot foi reiniciado.",
+          ephemeral: true
+        });
+      }
+
+      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+
+      if (!membro) {
+        return interaction.followUp({
+          content: "❌ Membro não encontrado no servidor.",
+          ephemeral: true
+        });
+      }
+
+      await membro.roles.add(CARGO_AUSENCIA_JUSTIFICADA).catch(() => {});
+
+      await membro.send({
+        content: "✅ Sua justificativa de ausência foi aprovada pelo P1/RH. A tag AUSEN.JUST. foi aplicada."
+      }).catch(() => {});
+
+      const canalLog = await interaction.guild.channels
+        .fetch(CANAL_AUSENCIAS_LOG)
+        .catch(() => null);
+
+      if (canalLog) {
+        const logEmbed = new EmbedBuilder()
+          .setColor("#00FF7F")
+          .setTitle("✅ Ausência Justificada Aprovada")
+          .addFields(
+            { name: "👤 Militar", value: `<@${userId}>`, inline: true },
+            { name: "🪪 Nome", value: dados.nome, inline: true },
+            { name: "🎖️ Posto/Graduação", value: dados.graduacao, inline: true },
+            { name: "🏢 Batalhão/Unidade", value: dados.batalhao, inline: true },
+            { name: "👮 Aprovado por", value: `${interaction.user}`, inline: true },
+            { name: "📝 Motivo", value: dados.motivo.slice(0, 1000) }
+          )
+          .setTimestamp();
+
+        await canalLog.send({ embeds: [logEmbed] }).catch(() => {});
+      }
+
+      ausenciasPendentes.delete(userId);
+
+      const aprovadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+        .setColor("#00FF7F")
+        .setFooter({ text: `Ausência aprovada por ${interaction.user.tag}` });
+
+      return interaction.message.edit({
+        content: "✅ Justificativa de ausência aprovada.",
+        embeds: [aprovadoEmbed],
+        components: []
+      });
+    }
+
+    if (
+      interaction.isButton() &&
+      interaction.customId.startsWith("negar_ausencia_")
+    ) {
+      await interaction.deferUpdate();
+
+      if (
+        !interaction.member.roles.cache.has(CARGO_P1HR) &&
+        !interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)
+      ) {
+        return interaction.followUp({
+          content: "❌ Apenas P1-HR pode negar justificativas de ausência.",
+          ephemeral: true
+        });
+      }
+
+      const userId = interaction.customId.replace("negar_ausencia_", "");
+      const dados = ausenciasPendentes.get(userId);
+
+      if (!dados) {
+        return interaction.followUp({
+          content: "❌ Solicitação de ausência não encontrada ou o bot foi reiniciado.",
+          ephemeral: true
+        });
+      }
+
+      const membro = await interaction.guild.members.fetch(userId).catch(() => null);
+
+      if (membro) {
+        await membro.send({
+          content: "❌ Sua justificativa de ausência foi negada pelo P1/RH. Abra um ticket no RH para tentar solicitar outra ausência."
+        }).catch(() => {});
+      }
+
+      ausenciasPendentes.delete(userId);
+
+      const negadoEmbed = EmbedBuilder.from(interaction.message.embeds[0])
+        .setColor("#FF0000")
+        .setFooter({ text: `Ausência negada por ${interaction.user.tag}` });
+
+      return interaction.message.edit({
+        content: "❌ Justificativa de ausência negada.",
         embeds: [negadoEmbed],
         components: []
       });
@@ -1638,14 +2208,12 @@ client.on(Events.GuildMemberAdd, async (member) => {
   const canal = client.channels.cache.get(LOG_ENTRADAS);
   if (!canal) return;
 
-  canal.send({
-    embeds: [
-      new EmbedBuilder()
-        .setColor("#00FF7F")
-        .setDescription(`📥 | ${member} entrou no servidor.`)
-        .setTimestamp()
-    ]
-  }).catch(() => {});
+  const embed = new EmbedBuilder()
+    .setColor("#00FF7F")
+    .setDescription(`📥 | ${member} entrou no servidor.`)
+    .setTimestamp();
+
+  canal.send({ embeds: [embed] }).catch(() => {});
 });
 
 client.on(Events.GuildMemberRemove, async (member) => {
@@ -1653,14 +2221,12 @@ client.on(Events.GuildMemberRemove, async (member) => {
   const canalExoneracoes = client.channels.cache.get(LOG_EXONERACOES);
 
   if (canalSaidas) {
-    canalSaidas.send({
-      embeds: [
-        new EmbedBuilder()
-          .setColor("#FFA500")
-          .setDescription(`📤 | ${member.user.tag} saiu do servidor.`)
-          .setTimestamp()
-      ]
-    }).catch(() => {});
+    const embedSaida = new EmbedBuilder()
+      .setColor("#FFA500")
+      .setDescription(`📤 | ${member.user.tag} saiu do servidor.`)
+      .setTimestamp();
+
+    canalSaidas.send({ embeds: [embedSaida] }).catch(() => {});
   }
 
   const audit = await member.guild.fetchAuditLogs({
@@ -1676,14 +2242,12 @@ client.on(Events.GuildMemberRemove, async (member) => {
     Date.now() - kickLog.createdTimestamp < 7000 &&
     canalExoneracoes
   ) {
-    canalExoneracoes.send({
-      embeds: [
-        new EmbedBuilder()
-          .setColor("#FF0000")
-          .setDescription(`🚫 | ${member.user.tag} foi exonerado por ${kickLog.executor}.`)
-          .setTimestamp()
-      ]
-    }).catch(() => {});
+    const embedKick = new EmbedBuilder()
+      .setColor("#FF0000")
+      .setDescription(`🚫 | ${member.user.tag} foi exonerado por ${kickLog.executor}.`)
+      .setTimestamp();
+
+    canalExoneracoes.send({ embeds: [embedKick] }).catch(() => {});
   }
 });
 
@@ -1699,14 +2263,12 @@ client.on(Events.GuildBanAdd, async (ban) => {
   const banLog = audit?.entries.first();
   const executor = banLog?.executor ? `${banLog.executor}` : "Não identificado";
 
-  canal.send({
-    embeds: [
-      new EmbedBuilder()
-        .setColor("#FF0000")
-        .setDescription(`⛔ | ${ban.user.tag} foi banido/exonerado por ${executor}.`)
-        .setTimestamp()
-    ]
-  }).catch(() => {});
+  const embed = new EmbedBuilder()
+    .setColor("#FF0000")
+    .setDescription(`⛔ | ${ban.user.tag} foi banido/exonerado por ${executor}.`)
+    .setTimestamp();
+
+  canal.send({ embeds: [embed] }).catch(() => {});
 });
 
 client.on(Events.MessageDelete, async (message) => {
@@ -1721,18 +2283,16 @@ client.on(Events.MessageDelete, async (message) => {
     ? message.content.slice(0, 1000)
     : "Mensagem sem texto ou não armazenada em cache.";
 
-  canal.send({
-    embeds: [
-      new EmbedBuilder()
-        .setColor("#5865F2")
-        .setDescription(`🎉 | O chat teve 1 mensagem deletada por ${message.author}!`)
-        .addFields(
-          { name: "📍 Canal", value: `${message.channel}`, inline: true },
-          { name: "💬 Conteúdo", value: conteudo }
-        )
-        .setTimestamp()
-    ]
-  }).catch(() => {});
+  const embed = new EmbedBuilder()
+    .setColor("#5865F2")
+    .setDescription(`🎉 | O chat teve 1 mensagem deletada por ${message.author}!`)
+    .addFields(
+      { name: "📍 Canal", value: `${message.channel}`, inline: true },
+      { name: "💬 Conteúdo", value: conteudo }
+    )
+    .setTimestamp();
+
+  canal.send({ embeds: [embed] }).catch(() => {});
 });
 
 client.on(Events.InviteCreate, async (invite) => {
@@ -1741,18 +2301,16 @@ client.on(Events.InviteCreate, async (invite) => {
 
   const criador = invite.inviter ? `${invite.inviter}` : "Não identificado";
 
-  canal.send({
-    embeds: [
-      new EmbedBuilder()
-        .setColor("#57F287")
-        .setDescription(`🔗 | ${criador} criou um novo convite em ${invite.channel}.`)
-        .addFields({
-          name: "📎 Convite",
-          value: `https://discord.gg/${invite.code}`
-        })
-        .setTimestamp()
-    ]
-  }).catch(() => {});
+  const embed = new EmbedBuilder()
+    .setColor("#57F287")
+    .setDescription(`🔗 | ${criador} criou um novo convite em ${invite.channel}.`)
+    .addFields({
+      name: "📎 Convite",
+      value: `https://discord.gg/${invite.code}`
+    })
+    .setTimestamp();
+
+  canal.send({ embeds: [embed] }).catch(() => {});
 });
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
@@ -1761,7 +2319,10 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     if (!canalAtual) return;
 
     const membros = canalAtual.members.filter(m => !m.user.bot);
+
     if (membros.size < 2) return;
+    if (membros.size > 4) return;
+
     if (pontosRegistrados.has(canalAtual.id)) return;
 
     const agora = new Date();
@@ -1776,7 +2337,9 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
       minute: "2-digit"
     });
 
-    const integrantes = membros.map(m => `• ${m.displayName}`).join("\n");
+    const integrantes = membros
+      .map(m => `• ${m.displayName}`)
+      .join("\n");
 
     const embed = new EmbedBuilder()
       .setColor("#2B2D31")
@@ -1790,13 +2353,13 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
       )
       .setTimestamp();
 
-    const canalCursoLog = CANAIS_CURSO[canalAtual.id];
+    if (CANAIS_CURSO[canalAtual.id]) {
+      const canalCursoLog = await newState.guild.channels
+        .fetch(CANAIS_CURSO[canalAtual.id])
+        .catch(() => null);
 
-    if (canalCursoLog) {
-      const canal = await newState.guild.channels.fetch(canalCursoLog).catch(() => null);
-
-      if (canal) {
-        await canal.send({ embeds: [embed] }).catch(() => {});
+      if (canalCursoLog) {
+        await canalCursoLog.send({ embeds: [embed] }).catch(() => {});
       }
 
       presencasCursos.set(canalAtual.id, {
@@ -1823,21 +2386,60 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
     }
 
     const nomeCanal = canalAtual.name.toLowerCase();
+
     let unidadePonto = null;
 
-    if (nomeCanal.includes("cpa")) unidadePonto = "CPA";
-    else if (nomeCanal.includes("ft") || nomeCanal.includes("força") || nomeCanal.includes("forca")) unidadePonto = "FORCA_TATICA";
-    else if (nomeCanal.includes("28") || nomeCanal.includes("22") || nomeCanal.includes("bpm")) unidadePonto = "28BPM";
-    else if (nomeCanal.includes("qcg")) unidadePonto = "QCG";
-    else if (nomeCanal.includes("corregedoria")) unidadePonto = "CORREGEDORIA";
-    else if (nomeCanal.includes("cav")) unidadePonto = "CAVPM";
-    else if (nomeCanal.includes("caep")) unidadePonto = "CAEP";
-    else if (nomeCanal.includes("choque") || nomeCanal.includes("cpchoque")) unidadePonto = "CPCHOQUE";
-    else if (nomeCanal.includes("baep")) unidadePonto = "BAEP";
-    else if (nomeCanal.includes("rota")) unidadePonto = "ROTA";
-    else if (nomeCanal.includes("anchieta")) unidadePonto = "ANCHIETA";
-    else if (nomeCanal.includes("humaita") || nomeCanal.includes("humaitá")) unidadePonto = "HUMAITA";
-    else if (nomeCanal.includes("4bp") || nomeCanal.includes("4º") || nomeCanal.includes("4°")) unidadePonto = "4BPCHOQUE";
+    if (
+      nomeCanal.includes("cpa") ||
+      nomeCanal.includes("m-cpa") ||
+      nomeCanal.includes("comando cpa")
+    ) {
+      unidadePonto = "CPA";
+    } else if (
+      nomeCanal.includes("pontos-ft") ||
+      nomeCanal.includes("força tática") ||
+      nomeCanal.includes("forca tatica") ||
+      nomeCanal.includes("forca-tatica") ||
+      nomeCanal.includes("ft")
+    ) {
+      unidadePonto = "FORCA_TATICA";
+    } else if (
+      nomeCanal.includes("28") ||
+      nomeCanal.includes("22") ||
+      nomeCanal.includes("bpm")
+    ) {
+      unidadePonto = "28BPM";
+    } else if (nomeCanal.includes("qcg")) {
+      unidadePonto = "QCG";
+    } else if (nomeCanal.includes("corregedoria")) {
+      unidadePonto = "CORREGEDORIA";
+    } else if (nomeCanal.includes("cav")) {
+      unidadePonto = "CAVPM";
+    } else if (nomeCanal.includes("caep")) {
+      unidadePonto = "CAEP";
+    } else if (
+      nomeCanal.includes("choque") ||
+      nomeCanal.includes("cpchoque")
+    ) {
+      unidadePonto = "CPCHOQUE";
+    } else if (nomeCanal.includes("baep")) {
+      unidadePonto = "BAEP";
+    } else if (nomeCanal.includes("rota")) {
+      unidadePonto = "ROTA";
+    } else if (nomeCanal.includes("anchieta")) {
+      unidadePonto = "ANCHIETA";
+    } else if (
+      nomeCanal.includes("humaita") ||
+      nomeCanal.includes("humaitá")
+    ) {
+      unidadePonto = "HUMAITA";
+    } else if (
+      nomeCanal.includes("4bp") ||
+      nomeCanal.includes("4º") ||
+      nomeCanal.includes("4°")
+    ) {
+      unidadePonto = "4BPCHOQUE";
+    }
 
     if (unidadePonto && CANAIS_LOG_PONTO[unidadePonto]) {
       const canalLogUnidade = await newState.guild.channels
